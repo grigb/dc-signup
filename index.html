@@ -79,7 +79,10 @@
         }
 
         .logo h1 {
-            color: #667eea;
+            background: linear-gradient(45deg, #22c55e, #8b5cf6, #06b6d4, #f97316, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             font-size: 24px;
             font-weight: 700;
             margin-bottom: 4px;
@@ -862,7 +865,7 @@
                     <textarea 
                         id="memberBio" 
                         name="memberBio" 
-                        placeholder="Share something about your creative work, background, or what you're working on..."
+                        placeholder="Share something about your creative work, background, or what you're working on."
                         maxlength="300"
                     ></textarea>
                     <div class="char-count" id="bioCharCount">0/300 characters</div>
@@ -873,7 +876,7 @@
                     <textarea 
                         id="memberQuote" 
                         name="memberQuote" 
-                        placeholder="Share why you're excited about Distributed Creatives, what drew you to join, or your thoughts on creator rights... We'd love to feature positive testimonials on our website!"
+                        placeholder="Share why you're excited about Distributed Creatives, why you joined, or your thoughts on creator rights."
                         maxlength="500"
                     ></textarea>
                     <div class="char-count" id="quoteCharCount">0/500 characters</div>
@@ -1227,7 +1230,9 @@
                     }
                 } else {
                     otherInput.classList.add('visible')
-                    otherText.focus()
+                    if (otherText) {
+                        otherText.focus()
+                    }
                 }
             } else {
                 // Toggle selection
@@ -1308,29 +1313,35 @@
             return search(creatorTypes)
         }
 
-        // Navigation handlers
-        navBack.addEventListener('click', () => {
-            if (navigationPath.length > 0) {
-                navigationPath.pop()
-                if (navigationPath.length === 0) {
-                    currentLevel = creatorTypes
-                } else {
-                    currentLevel = navigationPath[navigationPath.length - 1].children
+        // Navigation handlers - add null check
+        if (navBack) {
+            navBack.addEventListener('click', () => {
+                if (navigationPath.length > 0) {
+                    navigationPath.pop()
+                    if (navigationPath.length === 0) {
+                        currentLevel = creatorTypes
+                    } else {
+                        currentLevel = navigationPath[navigationPath.length - 1].children
+                    }
+                    renderCreatorTypes()
                 }
-                renderCreatorTypes()
-            }
-        })
+            })
+        }
 
-        // Other input handler
-        otherText.addEventListener('input', (e) => {
-            otherValue = e.target.value.trim()
-            updateCreatorTypeHeader()
-            updateSelectedTypes()
-        })
+        // Other input handler - add null check
+        if (otherText) {
+            otherText.addEventListener('input', (e) => {
+                otherValue = e.target.value.trim()
+                updateCreatorTypeHeader()
+                updateSelectedTypes()
+            })
+        }
 
         function removeOtherType() {
             otherValue = ""
-            otherText.value = ""
+            if (otherText) {
+                otherText.value = ""
+            }
             otherInput.classList.remove('visible')
             updateCreatorTypeHeader()
             updateSelectedTypes()
@@ -1941,17 +1952,23 @@
 
         // Event Listeners for new UI elements
         document.addEventListener('DOMContentLoaded', function() {
-            // Confirmation step buttons
-            document.getElementById('editBtn').addEventListener('click', function() {
-                showFormStep()
-            })
+            // Confirmation step buttons - add null checks since they're in hidden elements
+            const editBtn = document.getElementById('editBtn')
+            if (editBtn) {
+                editBtn.addEventListener('click', function() {
+                    showFormStep()
+                })
+            }
 
-            document.getElementById('confirmSubmitBtn').addEventListener('click', async function() {
-                if (currentSubmission) {
-                    await submitConfirmedData(currentSubmission)
-                    currentSubmission = null
-                }
-            })
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn')
+            if (confirmSubmitBtn) {
+                confirmSubmitBtn.addEventListener('click', async function() {
+                    if (currentSubmission) {
+                        await submitConfirmedData(currentSubmission)
+                        currentSubmission = null
+                    }
+                })
+            }
 
             // View toggle buttons
             document.getElementById('formViewBtn').addEventListener('click', function() {
@@ -1966,18 +1983,24 @@
                 document.getElementById('formViewBtn').classList.remove('active')
             })
 
-            // Offline viewer buttons
-            document.getElementById('backToFormBtn').addEventListener('click', function() {
-                showFormStep()
-                document.getElementById('formViewBtn').classList.add('active')
-                document.getElementById('offlineViewBtn').classList.remove('active')
-            })
+            // Offline viewer buttons - add null checks
+            const backToFormBtn = document.getElementById('backToFormBtn')
+            if (backToFormBtn) {
+                backToFormBtn.addEventListener('click', function() {
+                    showFormStep()
+                    document.getElementById('formViewBtn').classList.add('active')
+                    document.getElementById('offlineViewBtn').classList.remove('active')
+                })
+            }
 
-            document.getElementById('syncNowBtn').addEventListener('click', async function() {
-                await syncPendingFromLocal()
-                populateOfflineSubmissions()
-                updateViewToggle()
-            })
+            const syncNowBtn = document.getElementById('syncNowBtn')
+            if (syncNowBtn) {
+                syncNowBtn.addEventListener('click', async function() {
+                    await syncPendingFromLocal()
+                    populateOfflineSubmissions()
+                    updateViewToggle()
+                })
+            }
 
             // Initialize view toggle state
             updateViewToggle()
@@ -1991,12 +2014,15 @@
         // Handle form submission when submit button is outside the form
         function handleFormSubmit() {
             const form = document.getElementById('signupForm')
-            if (form.checkValidity()) {
-                const formData = new FormData(form)
-                handleSubmit({ preventDefault: () => {}, target: form })
-            } else {
-                form.reportValidity()
-            }
+            
+            // Create a synthetic submit event
+            const submitEvent = new Event('submit', {
+                bubbles: true,
+                cancelable: true
+            })
+            
+            // Dispatch the submit event to trigger the existing form handler
+            form.dispatchEvent(submitEvent)
         }
 
         // Simple Creator Type Modal Functions

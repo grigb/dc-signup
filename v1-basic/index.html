@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC Signup - Basic Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: #fafafa;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        .submit-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .view-data-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-data-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .data-viewer {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .data-viewer h2 {
+            color: #333;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .data-item {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .data-item strong {
+            color: #333;
+        }
+
+        .data-count {
+            text-align: center;
+            color: #666;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .clear-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
+        .back-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .container, .data-viewer {
+                margin: 10px;
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Form -->
+    <div class="container" id="formContainer">
+        <div class="logo">
+            <h1>Distributed Creatives</h1>
+            <p>Join Our Community</p>
+        </div>
+
+        <div class="success" id="successMessage">
+            Successfully saved! Data stored locally on your device.
+        </div>
+
+        <div class="error" id="errorMessage">
+            Please fill in all required fields.
+        </div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Join Now
+            </button>
+
+            <button type="button" class="view-data-btn" onclick="viewStoredData()">
+                View Stored Data
+            </button>
+        </form>
+    </div>
+
+    <!-- Data Viewer -->
+    <div class="data-viewer" id="dataViewer">
+        <h2>Stored Signups</h2>
+        <div class="data-count" id="dataCount">0 signups stored</div>
+        <div id="dataList"></div>
+        <button class="back-btn" onclick="backToForm()">Back to Form</button>
+        <button class="clear-btn" onclick="clearAllData()">Clear All Data</button>
+    </div>
+
+    <script>
+        // Get form elements
+        const form = document.getElementById('signupForm');
+        const formContainer = document.getElementById('formContainer');
+        const dataViewer = document.getElementById('dataViewer');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Form submission handler
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(form);
+            const name = formData.get('name').trim();
+            const email = formData.get('email').trim();
+
+            // Validate
+            if (!name || !email) {
+                showError('Please fill in all required fields.');
+                return;
+            }
+
+            // Create signup object
+            const signup = {
+                id: Date.now(),
+                name: name,
+                email: email,
+                timestamp: new Date().toISOString(),
+                device: 'mobile-web',
+                version: 'v1-basic'
+            };
+
+            // Save to localStorage
+            try {
+                let signups = JSON.parse(localStorage.getItem('dcSignups') || '[]');
+                signups.push(signup);
+                localStorage.setItem('dcSignups', JSON.stringify(signups));
+                
+                showSuccess();
+                form.reset();
+            } catch (error) {
+                showError('Failed to save data. Please try again.');
+                console.error('Storage error:', error);
+            }
+        });
+
+        function showSuccess() {
+            hideMessages();
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(message) {
+            hideMessages();
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function hideMessages() {
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+        }
+
+        function viewStoredData() {
+            const signups = JSON.parse(localStorage.getItem('dcSignups') || '[]');
+            const dataList = document.getElementById('dataList');
+            const dataCount = document.getElementById('dataCount');
+            
+            dataCount.textContent = `${signups.length} signup${signups.length !== 1 ? 's' : ''} stored`;
+            
+            if (signups.length === 0) {
+                dataList.innerHTML = '<div class="data-item">No signups yet. Submit the form to see data here.</div>';
+            } else {
+                dataList.innerHTML = signups.map(signup => `
+                    <div class="data-item">
+                        <strong>Name:</strong> ${signup.name}<br>
+                        <strong>Email:</strong> ${signup.email}<br>
+                        <strong>Date:</strong> ${new Date(signup.timestamp).toLocaleDateString()}<br>
+                        <strong>Time:</strong> ${new Date(signup.timestamp).toLocaleTimeString()}
+                    </div>
+                `).join('');
+            }
+            
+            formContainer.style.display = 'none';
+            dataViewer.style.display = 'block';
+        }
+
+        function backToForm() {
+            dataViewer.style.display = 'none';
+            formContainer.style.display = 'block';
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete all stored signups? This cannot be undone.')) {
+                localStorage.removeItem('dcSignups');
+                viewStoredData(); // Refresh the view
+            }
+        }
+
+        // Initial setup
+        hideMessages();
+    </script>
+</body>
+</html>

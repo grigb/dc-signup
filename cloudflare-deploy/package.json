@@ -1,0 +1,25 @@
+{
+  "name": "dc-genesis-signup",
+  "version": "1.0.0",
+  "description": "DC Genesis Members Signup System - Cloudflare Pages",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Static site - no build needed'",
+    "dev": "python3 -m http.server 4100",
+    "start": "python3 -m http.server 8080"
+  },
+  "keywords": [
+    "distributed-creatives",
+    "genesis-members",
+    "signup",
+    "offline-first",
+    "pwa"
+  ],
+  "author": "Distributed Creatives",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grigb/dc-signup.git"
+  },
+  "homepage": "https://signup.distributedcreatives.org"
+}

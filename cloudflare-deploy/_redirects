@@ -1,0 +1,10 @@
+# Cloudflare Pages Redirects for DC Genesis Signup
+
+# Redirect common paths to main form
+/signup /
+/register /
+/join /
+/genesis /
+
+# Handle trailing slashes
+/* /index.html 200

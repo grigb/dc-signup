@@ -394,6 +394,7 @@
                             <th>Email</th>
                             <th>Creator Types</th>
                             <th>Country</th>
+                            <th>Testimonial</th>
                             <th>Status</th>
                             <th>Joined</th>
                             <th>Actions</th>
@@ -557,6 +558,9 @@
                         </div>
                     </td>
                     <td>${escapeHtml(member.country || 'N/A')}</td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(member.member_quote || '')}">
+                        ${member.member_quote ? `"${escapeHtml(member.member_quote.substring(0, 50))}${member.member_quote.length > 50 ? '...' : ''}"` : 'No testimonial'}
+                    </td>
                     <td>
                         <span class="status-badge ${getStatusClass(member)}">
                             ${getStatusText(member)}
@@ -669,12 +673,14 @@
         }
         
         function generateCSV(data) {
-            const headers = ['Name', 'Email', 'Creator Types', 'Country', 'Email Verified', 'Genesis Member', 'Joined Date']
+            const headers = ['Name', 'Email', 'Creator Types', 'Country', 'Bio', 'Testimonial', 'Email Verified', 'Genesis Member', 'Joined Date']
             const rows = data.map(member => [
                 member.name,
                 member.email,
                 (member.creator_types || []).join('; '),
                 member.country || '',
+                member.member_bio || '',
+                member.member_quote || '',
                 member.email_verified ? 'Yes' : 'No',
                 member.include_in_genesis_group ? 'Yes' : 'No',
                 formatDate(member.created_at)

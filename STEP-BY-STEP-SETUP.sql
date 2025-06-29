@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS members (
   creator_types JSONB DEFAULT '[]'::jsonb,
   country VARCHAR(100),
   member_bio TEXT,
+  member_quote TEXT,
   allow_name_display BOOLEAN DEFAULT false,
   allow_creator_type_display BOOLEAN DEFAULT false,
   allow_comments_display BOOLEAN DEFAULT false,

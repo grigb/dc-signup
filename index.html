@@ -44,29 +44,46 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
         }
 
         .container {
             background: white;
             border-radius: 16px;
-            padding: 32px;
             width: 100%;
             max-width: 500px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .logo {
             text-align: center;
             margin-bottom: 24px;
+            padding: 20px 32px 0;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        .logo img {
+            width: 120px;
+            height: auto;
+            margin-bottom: 8px;
         }
 
         .logo h1 {
             color: #667eea;
             font-size: 24px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
+            margin-top: 0;
         }
 
         .logo p {
@@ -78,7 +95,7 @@
             padding: 8px 12px;
             border-radius: 6px;
             text-align: center;
-            margin-bottom: 16px;
+            margin: 0 32px 16px;
             font-size: 12px;
             font-weight: 600;
         }
@@ -333,7 +350,7 @@
             border-radius: 8px;
             padding: 16px;
             margin-top: 16px;
-            display: none;
+            display: block; /* Always visible for now */
         }
 
         .member-showcase.visible {
@@ -391,7 +408,7 @@
             padding: 12px;
             border-radius: 8px;
             text-align: center;
-            margin-bottom: 16px;
+            margin: 0 32px 16px;
             display: none;
         }
 
@@ -401,8 +418,202 @@
             padding: 12px;
             border-radius: 8px;
             text-align: center;
-            margin-bottom: 16px;
+            margin: 0 32px 16px;
             display: none;
+        }
+
+        /* Scrollable Content Area */
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 32px;
+        }
+
+        /* Fixed Bottom Button */
+        .fixed-bottom {
+            padding: 16px 32px 32px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Creator Type Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        .creator-type-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .creator-category {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .category-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .category-header:hover {
+            background: #f1f5f9;
+        }
+
+        .category-header.selected {
+            background: #e0e7ff;
+            border-bottom-color: #667eea;
+        }
+
+        .category-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .category-description {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .category-check {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .category-check.selected {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .subcategories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            padding: 16px;
+            background: #fafbfc;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .subcategory-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .subcategory-card:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .subcategory-card.selected {
+            border-color: #667eea;
+            background: #f0f9ff;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
+        }
+
+        .subcategory-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .subcategory-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+            padding-right: 20px;
+        }
+
+        .subcategory-description {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.3;
+        }
+
+        .simple-creator-input {
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 12px;
+            background: #fafafa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .simple-creator-input:hover {
+            border-color: #667eea;
+            background: white;
         }
 
         /* Confirmation Step Styles */
@@ -495,7 +706,7 @@
         /* View Toggle */
         .view-toggle {
             text-align: center;
-            margin-bottom: 16px;
+            margin: 0 32px 16px;
         }
 
         .view-toggle button {
@@ -526,7 +737,9 @@
 </head>
 <body>
     <div class="container">
-        <div class="logo">
+        <!-- Fixed Header with Logo -->
+        <div class="logo" onclick="goToHomepage()">
+            <img src="./images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
             <h1>Distributed Creatives</h1>
             <p>Join Our Community</p>
             <div id="testModeIndicator" style="display: none; background: #f59e0b; color: white; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px; font-weight: 600;">🧪 TEST MODE: Offline Simulation</div>
@@ -547,7 +760,9 @@
         <div class="success" id="successMessage"></div>
         <div class="error" id="errorMessage"></div>
 
-        <form id="signupForm">
+        <!-- Scrollable Content Area -->
+        <div class="scrollable-content">
+            <form id="signupForm">
             <div class="form-group">
                 <label for="name">Full Name *</label>
                 <input type="text" id="name" name="name" required>
@@ -560,26 +775,9 @@
 
             <div class="form-group">
                 <label>Creator Type (select all that apply) *</label>
-                <div class="creator-type-selector">
-                    <div class="creator-type-header">
-                        <span id="currentCategoryLabel">Choose your creator types</span>
-                        <span id="selectionCount">0 selected</span>
-                    </div>
-                    
-                    <div class="creator-type-nav" id="creatorTypeNav">
-                        <button type="button" class="nav-back" id="navBack">
-                            ← Back
-                        </button>
-                        <div class="nav-path" id="navPath"></div>
-                    </div>
-                    
-                    <div class="creator-type-list" id="creatorTypeList">
-                        <!-- Options populated by JavaScript -->
-                    </div>
-                    
-                    <div class="other-input" id="otherInput">
-                        <input type="text" placeholder="Specify your creator type..." id="otherText">
-                    </div>
+                <div class="simple-creator-input" onclick="openCreatorTypeModal()">
+                    <span id="creatorTypeDisplay">Click to select your creator types</span>
+                    <span id="selectionCount">0 selected</span>
                 </div>
                 
                 <div class="selected-types" id="selectedTypes">
@@ -644,58 +842,118 @@
             <!-- Member Showcase Section -->
             <div class="member-showcase" id="memberShowcase">
                 <h4>✨ Tell us about yourself (optional)</h4>
-                <textarea 
-                    id="memberBio" 
-                    name="memberBio" 
-                    placeholder="Share something about your creative work, why you joined DC, or what you're excited about... This can be displayed on our website if you've given permission above."
-                    maxlength="300"
-                ></textarea>
-                <div class="char-count" id="charCount">0/300 characters</div>
-            </div>
+                
+                <div class="form-group">
+                    <label for="memberBio">About You</label>
+                    <textarea 
+                        id="memberBio" 
+                        name="memberBio" 
+                        placeholder="Share something about your creative work, background, or what you're working on..."
+                        maxlength="300"
+                    ></textarea>
+                    <div class="char-count" id="bioCharCount">0/300 characters</div>
+                </div>
 
-            <button type="submit" class="submit-btn" id="submitBtn">
+                <div class="form-group">
+                    <label for="memberQuote">Testimonial or Quote About DC</label>
+                    <textarea 
+                        id="memberQuote" 
+                        name="memberQuote" 
+                        placeholder="Share why you're excited about Distributed Creatives, what drew you to join, or your thoughts on creator rights... We'd love to feature positive testimonials on our website!"
+                        maxlength="500"
+                    ></textarea>
+                    <div class="char-count" id="quoteCharCount">0/500 characters</div>
+                    <div style="font-size: 12px; color: #059669; margin-top: 4px; font-style: italic;">
+                        💡 Great testimonials help us showcase our community's impact and attract like-minded creators
+                    </div>
+                </div>
+            </div>
+            </form>
+        </div>
+
+        <!-- Fixed Bottom Button Area -->
+        <div class="fixed-bottom">
+            <button type="button" class="submit-btn" id="submitBtn" onclick="handleFormSubmit()">
                 Review Submission
             </button>
-        </form>
+        </div>
 
         <!-- Confirmation Step -->
-        <div id="confirmationStep" style="display: none;">
-            <div class="logo">
+        <div id="confirmationStep" style="display: none; flex-direction: column; height: 100%;">
+            <div class="logo" onclick="goToHomepage()">
+                <img src="./images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
                 <h2>📋 Review Your Submission</h2>
                 <p>Please confirm all details are correct before joining</p>
             </div>
 
-            <div id="confirmationDetails" class="confirmation-details">
-                <!-- Details populated by JavaScript -->
+            <div class="scrollable-content">
+                <div id="confirmationDetails" class="confirmation-details">
+                    <!-- Details populated by JavaScript -->
+                </div>
             </div>
 
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;">
-                    ← Edit Details
-                </button>
-                <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;">
-                    Join the Community
-                </button>
+            <div class="fixed-bottom">
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;">
+                        ← Edit Details
+                    </button>
+                    <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;">
+                        Join the Community
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Offline Submissions Viewer -->
-        <div id="offlineViewer" style="display: none;">
-            <div class="logo">
+        <div id="offlineViewer" style="display: none; flex-direction: column; height: 100%;">
+            <div class="logo" onclick="goToHomepage()">
+                <img src="./images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
                 <h2>📱 Offline Submissions</h2>
                 <p>Submissions waiting to sync</p>
             </div>
 
-            <div id="offlineSubmissionsList">
-                <!-- Populated by JavaScript -->
+            <div class="scrollable-content">
+                <div id="offlineSubmissionsList">
+                    <!-- Populated by JavaScript -->
+                </div>
             </div>
 
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="submit-btn" id="backToFormBtn" style="background: #64748b; flex: 1;">
-                    ← Back to Form
+            <div class="fixed-bottom">
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="submit-btn" id="backToFormBtn" style="background: #64748b; flex: 1;">
+                        ← Back to Form
+                    </button>
+                    <button type="button" class="submit-btn" id="syncNowBtn" style="flex: 1;">
+                        Sync Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Creator Type Modal -->
+    <div id="creatorTypeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Select Your Creator Types</h3>
+                <button class="modal-close" onclick="closeCreatorTypeModal()">&times;</button>
+            </div>
+            
+            <div class="creator-type-categories" id="creatorTypeCategories">
+                <!-- Creator type categories populated by JavaScript -->
+            </div>
+            
+            <div class="form-group">
+                <label for="otherCreatorType">Other (specify):</label>
+                <input type="text" id="otherCreatorType" placeholder="Describe your creative work...">
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button type="button" class="submit-btn" onclick="closeCreatorTypeModal()" style="background: #64748b; flex: 1;">
+                    Cancel
                 </button>
-                <button type="button" class="submit-btn" id="syncNowBtn" style="flex: 1;">
-                    Sync Now
+                <button type="button" class="submit-btn" onclick="saveCreatorTypes()" style="flex: 2;">
+                    Save Selection
                 </button>
             </div>
         </div>
@@ -744,9 +1002,11 @@
         const otherText = document.getElementById('otherText')
         const memberShowcase = document.getElementById('memberShowcase')
         const memberBio = document.getElementById('memberBio')
-        const charCount = document.getElementById('charCount')
+        const memberQuote = document.getElementById('memberQuote')
+        const bioCharCount = document.getElementById('bioCharCount')
+        const quoteCharCount = document.getElementById('quoteCharCount')
 
-        // Load creator types from database
+        // Load creator types from database with JSON fallback
         async function loadCreatorTypes() {
             // In test offline mode, skip database and use local file
             if (testOfflineMode) {
@@ -755,27 +1015,24 @@
             }
             
             try {
-                // Call the database function to get creator types as JSON
+                // First try to load from Supabase database
                 const { data, error } = await supabase.rpc('get_creator_types_json')
                 
                 if (error) {
                     console.error('Database error loading creator types:', error)
-                    // Fallback to local JSON file
                     return loadCreatorTypesFromFile()
                 }
                 
                 if (data && data.creatorTypes) {
                     creatorTypes = data.creatorTypes
-                    currentLevel = creatorTypes  // Set current level to top-level categories
-                    console.log('Creator types loaded from database:', data.version)
-                    renderCreatorTypes()
+                    console.log('✅ Creator types loaded from database:', data.version)
+                    console.log('Found', creatorTypes.length, 'creator type categories')
                 } else {
                     console.warn('No creator types data received, falling back to file')
                     return loadCreatorTypesFromFile()
                 }
             } catch (error) {
                 console.error('Failed to load creator types from database:', error)
-                // Fallback to local JSON file
                 return loadCreatorTypesFromFile()
             }
         }
@@ -786,12 +1043,63 @@
                 const response = await fetch('./creator-types.json')
                 const data = await response.json()
                 creatorTypes = data.creatorTypes
-                currentLevel = creatorTypes  // Set current level to top-level categories
-                console.log('Creator types loaded from file:', data.version)
-                renderCreatorTypes()
+                console.log('📄 Creator types loaded from local file:', data.version)
             } catch (error) {
                 console.error('Failed to load creator types from file:', error)
-                showError('Failed to load creator type options. Please refresh the page.')
+                // Final fallback to hardcoded list with hierarchy
+                creatorTypes = [
+                    {
+                        id: 'traditional-arts',
+                        label: 'Traditional Arts',
+                        description: 'Classic artistic mediums and forms',
+                        children: [
+                            { id: 'visual-arts', label: 'Visual Arts', description: 'Painting, drawing, sculpture' },
+                            { id: 'music', label: 'Music', description: 'Composition, performance, production' },
+                            { id: 'writing', label: 'Writing', description: 'Fiction, non-fiction, poetry' },
+                            { id: 'photography', label: 'Photography', description: 'Digital and film photography' },
+                            { id: 'performance-acting', label: 'Performance/Acting', description: 'Theater, film, live performance' }
+                        ]
+                    },
+                    {
+                        id: 'technical-creation',
+                        label: 'Technical Creation',
+                        description: 'Technology-focused creative work',
+                        children: [
+                            { id: 'software-development', label: 'Software Development', description: 'Applications, systems, tools' },
+                            { id: 'game-development', label: 'Game Development', description: 'Video games, interactive media' },
+                            { id: 'web-development', label: 'Web Development', description: 'Websites, web applications' },
+                            { id: 'engineering', label: 'Engineering', description: 'Hardware, systems, innovation' },
+                            { id: 'data-science', label: 'Data Science', description: 'Analytics, visualization, AI/ML' }
+                        ]
+                    },
+                    {
+                        id: 'content-creation',
+                        label: 'Content Creation',
+                        description: 'Digital content and media production',
+                        children: [
+                            { id: 'video', label: 'Video', description: 'Film, streaming, video production' },
+                            { id: 'podcasting', label: 'Podcasting', description: 'Audio content, broadcasting' },
+                            { id: 'blogging', label: 'Blogging', description: 'Written online content' },
+                            { id: 'social-media', label: 'Social Media', description: 'Platform-specific content creation' }
+                        ]
+                    },
+                    {
+                        id: 'design-fields',
+                        label: 'Design Fields',
+                        description: 'Visual and functional design work',
+                        children: [
+                            { id: 'ux-ui-design', label: 'UX/UI Design', description: 'User experience, interface design' },
+                            { id: 'graphic-design', label: 'Graphic Design', description: 'Visual communication, branding' },
+                            { id: 'industrial-design', label: 'Industrial Design', description: 'Product design, manufacturing' }
+                        ]
+                    },
+                    {
+                        id: 'other',
+                        label: 'Other',
+                        description: 'Creative work not listed above'
+                    }
+                ]
+                console.log('⚠️ Using hardcoded creator types fallback')
             }
         }
 
@@ -805,7 +1113,7 @@
             updateConnectionStatus()
             loadCreatorTypes() // Load creator types first
             setupPrivacyControls()
-            setupCharacterCounter()
+            setupCharacterCounters()
             registerServiceWorker() // Enable offline functionality
             
             // Auto-sync pending submissions on page load if online
@@ -1034,16 +1342,29 @@
             }
         }
 
-        // Character counter
-        function setupCharacterCounter() {
+        // Character counters
+        function setupCharacterCounters() {
+            // Bio character counter
             memberBio.addEventListener('input', (e) => {
                 const count = e.target.value.length
-                charCount.textContent = `${count}/300 characters`
+                bioCharCount.textContent = `${count}/300 characters`
                 
                 if (count > 250) {
-                    charCount.style.color = '#f59e0b'
+                    bioCharCount.style.color = '#f59e0b'
                 } else {
-                    charCount.style.color = '#059669'
+                    bioCharCount.style.color = '#059669'
+                }
+            })
+
+            // Quote character counter
+            memberQuote.addEventListener('input', (e) => {
+                const count = e.target.value.length
+                quoteCharCount.textContent = `${count}/500 characters`
+                
+                if (count > 450) {
+                    quoteCharCount.style.color = '#f59e0b'
+                } else {
+                    quoteCharCount.style.color = '#059669'
                 }
             })
         }
@@ -1067,11 +1388,13 @@
 
         function updateConnectionStatus() {
             if (isOnline) {
-                connectionStatus.innerHTML = '🟢 Online - Saves to database'
-                connectionStatus.className = 'connection-status online'
+                // Hide status when online - no need to show
+                connectionStatus.style.display = 'none'
             } else {
+                // Show offline warning
                 connectionStatus.innerHTML = '🔴 Offline - Saves locally only'
                 connectionStatus.className = 'connection-status offline'
+                connectionStatus.style.display = 'block'
             }
         }
 
@@ -1087,6 +1410,7 @@
             const email = formData.get('email').trim()
             const country = formData.get('country')
             const bio = memberBio.value.trim()
+            const quote = memberQuote.value.trim()
             
             // Validate
             if (!name || !email) {
@@ -1120,6 +1444,7 @@
                 creator_types: creatorTypesArray,
                 country: country || null,
                 member_bio: bio || null,
+                member_quote: quote || null,
                 allow_name_display: document.getElementById('allowNameDisplay').checked,
                 allow_creator_type_display: document.getElementById('allowCreatorTypeDisplay').checked,
                 allow_comments_display: document.getElementById('allowCommentsDisplay').checked,
@@ -1175,7 +1500,8 @@
             memberShowcase.classList.remove('visible')
             renderCreatorTypes()
             updateSelectedTypes()
-            charCount.textContent = '0/300 characters'
+            bioCharCount.textContent = '0/300 characters'
+            quoteCharCount.textContent = '0/500 characters'
         }
 
         // Database operations
@@ -1451,6 +1777,12 @@
                     <span class="confirmation-value">${submission.member_bio}</span>
                 </div>
                 ` : ''}
+                ${submission.member_quote ? `
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Testimonial:</span>
+                    <span class="confirmation-value">"${submission.member_quote}"</span>
+                </div>
+                ` : ''}
                 <div class="confirmation-item">
                     <span class="confirmation-label">Genesis Group:</span>
                     <span class="confirmation-value">${submission.include_in_genesis_group ? 'Yes' : 'No'}</span>
@@ -1480,14 +1812,20 @@
             }
 
             container.innerHTML = submissions.map(sub => `
-                <div class="offline-submission">
+                <div class="offline-submission" data-id="${sub.id}">
                     <div class="offline-submission-header">
                         <span class="offline-submission-name">${sub.name}</span>
-                        <span class="offline-submission-time">${new Date(sub.timestamp).toLocaleString()}</span>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="offline-submission-time">${new Date(sub.timestamp).toLocaleString()}</span>
+                            <button class="btn btn-edit" onclick="editOfflineSubmission('${sub.id}')" style="padding: 4px 8px; font-size: 10px;">Edit</button>
+                            <button class="btn btn-delete" onclick="deleteOfflineSubmission('${sub.id}')" style="padding: 4px 8px; font-size: 10px;">Delete</button>
+                        </div>
                     </div>
                     <div class="offline-submission-details">
                         ${sub.email} • ${sub.creator_types.length} creator type(s)
                         ${sub.country ? ` • ${sub.country}` : ''}
+                        ${sub.member_bio ? `<br><strong>Bio:</strong> ${sub.member_bio.substring(0, 80)}${sub.member_bio.length > 80 ? '...' : ''}` : ''}
+                        ${sub.member_quote ? `<br><strong>Testimonial:</strong> "${sub.member_quote.substring(0, 80)}${sub.member_quote.length > 80 ? '...' : ''}"` : ''}
                     </div>
                 </div>
             `).join('')
@@ -1501,6 +1839,87 @@
             if (offlineSubmissions.length > 0) {
                 document.getElementById('viewToggle').style.display = 'block'
             }
+        }
+
+        // Offline submission management functions
+        function editOfflineSubmission(submissionId) {
+            const submissions = getLocalSubmissions()
+            const submission = submissions.find(sub => sub.id === submissionId)
+            
+            if (!submission) {
+                showError('Submission not found')
+                return
+            }
+
+            // Populate form with submission data
+            document.getElementById('name').value = submission.name
+            document.getElementById('email').value = submission.email
+            
+            // Set country
+            const countrySelect = document.getElementById('country')
+            if (submission.country) {
+                countrySelect.value = submission.country
+            }
+
+            // Set creator types
+            selectedCreatorTypes = submission.creator_types.filter(type => !type.startsWith('other:'))
+            const otherTypes = submission.creator_types.filter(type => type.startsWith('other:'))
+            if (otherTypes.length > 0) {
+                otherValue = otherTypes[0].replace('other:', '')
+                document.getElementById('otherText').value = otherValue
+                otherInput.classList.add('visible')
+            }
+
+            // Set bio and quote
+            if (submission.member_bio) {
+                memberBio.value = submission.member_bio
+                bioCharCount.textContent = `${submission.member_bio.length}/300 characters`
+            }
+            if (submission.member_quote) {
+                memberQuote.value = submission.member_quote
+                quoteCharCount.textContent = `${submission.member_quote.length}/500 characters`
+            }
+
+            // Set checkboxes
+            document.getElementById('allowNameDisplay').checked = submission.allow_name_display
+            document.getElementById('allowCreatorTypeDisplay').checked = submission.allow_creator_type_display  
+            document.getElementById('allowCommentsDisplay').checked = submission.allow_comments_display
+            document.getElementById('includeInGenesisGroup').checked = submission.include_in_genesis_group
+
+            // Update UI
+            updateSelectedTypes()
+            updatePrivacyControls()
+
+            // Delete the old submission and switch to form view
+            deleteOfflineSubmissionSilent(submissionId)
+            showFormStep()
+            
+            showSuccess('Submission loaded for editing. Make your changes and resubmit.')
+        }
+
+        function deleteOfflineSubmission(submissionId) {
+            const submissions = getLocalSubmissions()
+            const submission = submissions.find(sub => sub.id === submissionId)
+            
+            if (!submission) {
+                showError('Submission not found')
+                return
+            }
+
+            if (!confirm(`Delete offline submission for "${submission.name}" (${submission.email})? This cannot be undone.`)) {
+                return
+            }
+
+            deleteOfflineSubmissionSilent(submissionId)
+            populateOfflineSubmissions()
+            updateViewToggle()
+            showSuccess('Offline submission deleted')
+        }
+
+        function deleteOfflineSubmissionSilent(submissionId) {
+            const submissions = getLocalSubmissions()
+            const updatedSubmissions = submissions.filter(sub => sub.id !== submissionId)
+            localStorage.setItem('dcSubmissions', JSON.stringify(updatedSubmissions))
         }
 
         // Event Listeners for new UI elements
@@ -1546,6 +1965,192 @@
             // Initialize view toggle state
             updateViewToggle()
         })
+
+        // Navigation Functions
+        function goToHomepage() {
+            window.open('https://distributedcreatives.org', '_blank')
+        }
+
+        // Handle form submission when submit button is outside the form
+        function handleFormSubmit() {
+            const form = document.getElementById('signupForm')
+            if (form.checkValidity()) {
+                const formData = new FormData(form)
+                handleSubmit({ preventDefault: () => {}, target: form })
+            } else {
+                form.reportValidity()
+            }
+        }
+
+        // Simple Creator Type Modal Functions
+        function openCreatorTypeModal() {
+            console.log('Opening creator type modal...')
+            const modal = document.getElementById('creatorTypeModal')
+            if (!modal) {
+                console.error('Modal element not found!')
+                return
+            }
+            modal.style.display = 'flex'
+            console.log('Modal opened, loading creator types...')
+            loadCreatorTypesIntoModal()
+        }
+
+        function closeCreatorTypeModal() {
+            document.getElementById('creatorTypeModal').style.display = 'none'
+        }
+
+        function loadCreatorTypesIntoModal() {
+            const container = document.getElementById('creatorTypeCategories')
+            
+            console.log('Loading creator types into modal:', creatorTypes.length, 'categories')
+            
+            if (!creatorTypes || creatorTypes.length === 0) {
+                container.innerHTML = '<p>No creator types available. Please check the database connection.</p>'
+                return
+            }
+            
+            container.innerHTML = creatorTypes.map(category => {
+                const categorySelected = selectedCreatorTypes.includes(category.id)
+                const hasSelectedChildren = category.children && category.children.some(child => 
+                    selectedCreatorTypes.includes(child.id)
+                )
+                
+                console.log(`Category: ${category.label}, has children: ${!!category.children}, children count: ${category.children ? category.children.length : 0}`)
+                
+                return `
+                    <div class="creator-category">
+                        <div class="category-header ${categorySelected ? 'selected' : ''}" 
+                             onclick="toggleCreatorType('${category.id}')">
+                            <div>
+                                <div class="category-title">${category.label}</div>
+                                <div class="category-description">${category.description}</div>
+                            </div>
+                            <div class="category-check ${categorySelected ? 'selected' : ''}">
+                                ${categorySelected ? '✓' : ''}
+                            </div>
+                        </div>
+                        ${category.children && category.children.length > 0 ? `
+                            <div class="subcategories">
+                                ${category.children.map(child => {
+                                    const childSelected = selectedCreatorTypes.includes(child.id)
+                                    console.log(`  Child: ${child.label}, selected: ${childSelected}`)
+                                    return `
+                                        <div class="subcategory-card ${childSelected ? 'selected' : ''}"
+                                             onclick="event.stopPropagation(); toggleCreatorType('${child.id}');">
+                                            <div class="subcategory-title">${child.label}</div>
+                                            <div class="subcategory-description">${child.description}</div>
+                                        </div>
+                                    `
+                                }).join('')}
+                            </div>
+                        ` : category.children ? `
+                            <div class="subcategories">
+                                <p style="padding: 16px; color: #6b7280; font-style: italic;">No subcategories available</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `
+            }).join('')
+            
+            console.log('Modal HTML generated, container updated')
+        }
+
+        function toggleCreatorType(typeId) {
+            const isCurrentlySelected = selectedCreatorTypes.includes(typeId)
+            
+            if (isCurrentlySelected) {
+                // Remove the type
+                selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== typeId)
+            } else {
+                // Add the type
+                selectedCreatorTypes.push(typeId)
+                
+                // Check if this is a parent category
+                const parentCategory = creatorTypes.find(cat => cat.id === typeId)
+                if (parentCategory && parentCategory.children) {
+                    // If selecting a parent, remove any selected children to avoid duplication
+                    const childIds = parentCategory.children.map(child => child.id)
+                    selectedCreatorTypes = selectedCreatorTypes.filter(id => !childIds.includes(id))
+                } else {
+                    // If selecting a child, remove the parent category if it was selected
+                    const parentOfChild = creatorTypes.find(cat => 
+                        cat.children && cat.children.some(child => child.id === typeId)
+                    )
+                    if (parentOfChild && selectedCreatorTypes.includes(parentOfChild.id)) {
+                        selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== parentOfChild.id)
+                    }
+                }
+            }
+            
+            loadCreatorTypesIntoModal() // Refresh to show selection
+        }
+
+        function saveCreatorTypes() {
+            const otherType = document.getElementById('otherCreatorType').value.trim()
+            if (otherType) {
+                otherValue = otherType
+            }
+            
+            updateSelectedTypesDisplay()
+            closeCreatorTypeModal()
+        }
+
+        function updateSelectedTypesDisplay() {
+            const display = document.getElementById('creatorTypeDisplay')
+            const count = document.getElementById('selectionCount')
+            const container = document.getElementById('selectedTypes')
+            
+            const totalCount = selectedCreatorTypes.length + (otherValue ? 1 : 0)
+            count.textContent = `${totalCount} selected`
+            
+            if (totalCount > 0) {
+                display.textContent = 'Creator types selected'
+            } else {
+                display.textContent = 'Click to select your creator types'
+            }
+            
+            // Show selected types as tags
+            container.innerHTML = ''
+            selectedCreatorTypes.forEach(typeId => {
+                const type = findCreatorTypeById(typeId)
+                if (type) {
+                    const tag = document.createElement('div')
+                    tag.className = 'selected-type-tag'
+                    tag.innerHTML = `${type.label} <button type="button" class="remove-type" onclick="removeCreatorType('${typeId}')">×</button>`
+                    container.appendChild(tag)
+                }
+            })
+            
+            if (otherValue) {
+                const tag = document.createElement('div')
+                tag.className = 'selected-type-tag'
+                tag.innerHTML = `Other: ${otherValue} <button type="button" class="remove-type" onclick="removeOtherType()">×</button>`
+                container.appendChild(tag)
+            }
+        }
+
+        function findCreatorTypeById(id) {
+            for (const category of creatorTypes) {
+                if (category.id === id) return category
+                if (category.children) {
+                    for (const child of category.children) {
+                        if (child.id === id) return child
+                    }
+                }
+            }
+            return null
+        }
+
+        function removeCreatorType(typeId) {
+            selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== typeId)
+            updateSelectedTypesDisplay()
+        }
+
+        function removeOtherType() {
+            otherValue = ""
+            document.getElementById('otherCreatorType').value = ""
+            updateSelectedTypesDisplay()
+        }
     </script>
 </body>
 </html>

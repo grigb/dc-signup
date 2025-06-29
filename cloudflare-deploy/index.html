@@ -425,6 +425,8 @@
         <div class="connection-status" id="connectionStatus">
             🟡 Checking connection...
         </div>
+        
+        <div id="syncStatus" style="display: none; background: #3b82f6; color: white; padding: 8px; border-radius: 4px; margin-bottom: 16px; text-align: center; font-size: 12px; font-weight: 600;"></div>
 
         <div class="success" id="successMessage"></div>
         <div class="error" id="errorMessage"></div>
@@ -646,6 +648,11 @@
             setupPrivacyControls()
             setupCharacterCounter()
             registerServiceWorker() // Enable offline functionality
+            
+            // Auto-sync pending submissions on page load if online
+            if (isOnline && !testOfflineMode) {
+                setTimeout(() => syncPendingFromLocal(), 2000)
+            }
             
             // Listen for connection changes
             window.addEventListener('online', handleOnline)
@@ -887,7 +894,11 @@
             isOnline = true
             updateConnectionStatus()
             // Auto-sync pending submissions when coming back online
-            setTimeout(() => syncPendingFromLocal(), 1000)
+            setTimeout(() => {
+                if (!testOfflineMode) {
+                    syncPendingFromLocal()
+                }
+            }, 1000)
         }
 
         function handleOffline() {
@@ -1110,20 +1121,66 @@
             const submissions = getLocalSubmissions()
             const pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending')
             
+            if (pendingSubmissions.length === 0) {
+                console.log('No pending submissions to sync')
+                return
+            }
+            
             console.log(`Syncing ${pendingSubmissions.length} pending submissions...`)
+            showSyncStatus(`🔄 Syncing ${pendingSubmissions.length} offline submissions...`)
+            
+            let syncedCount = 0
+            let failedCount = 0
             
             for (const submission of pendingSubmissions) {
                 const success = await saveToDatabase(submission)
                 if (success) {
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
+                    syncedCount++
                     console.log(`Synced submission for ${submission.email}`)
                 } else {
                     submission.attempts = (submission.attempts || 0) + 1
                     updateLocalSubmission(submission)
+                    failedCount++
                     console.log(`Failed to sync submission for ${submission.email}, attempt ${submission.attempts}`)
                 }
             }
+            
+            if (syncedCount > 0) {
+                showSyncStatus(`✅ Synced ${syncedCount} submissions successfully!`, 'success')
+                setTimeout(() => hideSyncStatus(), 3000)
+            }
+            
+            if (failedCount > 0) {
+                showSyncStatus(`⚠️ ${failedCount} submissions failed to sync`, 'warning')
+                setTimeout(() => hideSyncStatus(), 5000)
+            }
+        }
+        
+        function showSyncStatus(message, type = 'info') {
+            const syncStatus = document.getElementById('syncStatus')
+            syncStatus.textContent = message
+            syncStatus.style.display = 'block'
+            
+            // Set color based on type
+            switch(type) {
+                case 'success':
+                    syncStatus.style.background = '#10b981'
+                    break
+                case 'warning':
+                    syncStatus.style.background = '#f59e0b'
+                    break
+                case 'error':
+                    syncStatus.style.background = '#ef4444'
+                    break
+                default:
+                    syncStatus.style.background = '#3b82f6'
+            }
+        }
+        
+        function hideSyncStatus() {
+            document.getElementById('syncStatus').style.display = 'none'
         }
 
         // UI helpers

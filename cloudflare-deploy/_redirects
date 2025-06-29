@@ -1,10 +1,15 @@
 # Cloudflare Pages Redirects for DC Genesis Signup
 
+# Admin tool - serve directly
+/admin /admin.html 200
+/admin/ /admin.html 200
+
 # Redirect common paths to main form
 /signup /
 /register /
 /join /
 /genesis /
 
-# Handle trailing slashes
+# Handle remaining paths to main form, but preserve admin.html
+/admin.html /admin.html 200
 /* /index.html 200

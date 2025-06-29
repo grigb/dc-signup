@@ -1,0 +1,23 @@
+{
+  "name": "dc-signup-system",
+  "version": "1.0.0",
+  "description": "An offline-first, progressive signup system for the Distributed Creatives network. Works as both a modal component across websites and a standalone conference registration tool.",
+  "main": "test-supabase-setup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grigb/dc-signup.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/grigb/dc-signup/issues"
+  },
+  "homepage": "https://github.com/grigb/dc-signup#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.2"
+  }
+}

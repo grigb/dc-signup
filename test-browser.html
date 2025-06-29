@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Database Setup Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #00ff00; }
+        .log { margin: 5px 0; }
+        .success { color: #00ff00; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffa500; }
+        .info { color: #64b5f6; }
+        button { padding: 10px 20px; margin: 10px 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Supabase Database Setup</h1>
+    <div id="output"></div>
+    
+    <button onclick="runSetup()">Run Setup & Tests</button>
+    <button onclick="runSQLScripts()">Execute SQL Scripts</button>
+    <button onclick="testCreatorTypes()">Test Creator Types</button>
+    
+    <script>
+        const supabaseUrl = 'https://jgnyutkpxapaghderjmj.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU5NDEsImV4cCI6MjA2Njc5MTk0MX0.kIHBUGVwkWN1zxkzHXYk8gpofr5sYmiQrOGkxpapu2I'
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+        
+        function log(message, type = 'info') {
+            const output = document.getElementById('output')
+            const div = document.createElement('div')
+            div.className = `log ${type}`
+            div.textContent = message
+            output.appendChild(div)
+            console.log(message)
+            output.scrollTop = output.scrollHeight
+        }
+        
+        async function runSetup() {
+            log('🚀 Starting database setup...', 'info')
+            
+            try {
+                // Test basic connection
+                log('1. Testing basic connection...', 'info')
+                const { data: testData, error: testError } = await supabase
+                    .from('signups')
+                    .select('count(*)', { count: 'exact', head: true })
+                
+                if (testError) {
+                    log(`❌ Connection failed: ${testError.message}`, 'error')
+                    return
+                }
+                
+                log('✅ Basic connection working!', 'success')
+                log(`📊 Current signups count: ${testData}`, 'info')
+                
+                // Check existing schema
+                log('2. Checking existing schema...', 'info')
+                const { data: sample, error: sampleError } = await supabase
+                    .from('signups')
+                    .select('*')
+                    .limit(1)
+                
+                if (sampleError) {
+                    log(`❌ Schema check failed: ${sampleError.message}`, 'error')
+                    return
+                }
+                
+                log('✅ Signups table accessible', 'success')
+                
+                // Check for privacy columns
+                log('3. Checking for enhanced schema columns...', 'info')
+                const sampleRecord = sample[0] || {}
+                const hasPrivacyColumns = 'allow_name_display' in sampleRecord
+                
+                if (hasPrivacyColumns) {
+                    log('✅ Enhanced privacy columns exist', 'success')
+                } else {
+                    log('⚠️  Enhanced privacy columns missing', 'warning')
+                    log('   Need to add privacy control fields', 'warning')
+                }
+                
+                // Check creator_types table
+                log('4. Checking creator_types table...', 'info')
+                const { data: creatorTypesCount, error: creatorError } = await supabase
+                    .from('creator_types')
+                    .select('count(*)', { count: 'exact', head: true })
+                
+                if (creatorError) {
+                    log('⚠️  Creator types table does not exist', 'warning')
+                    log(`   Error: ${creatorError.message}`, 'warning')
+                } else {
+                    log('✅ Creator types table exists', 'success')
+                    log(`📊 Creator types count: ${creatorTypesCount}`, 'info')
+                    
+                    // Test function
+                    log('5. Testing creator types function...', 'info')
+                    const { data: functionData, error: functionError } = await supabase
+                        .rpc('get_creator_types_json')
+                    
+                    if (functionError) {
+                        log(`⚠️  Creator types function error: ${functionError.message}`, 'warning')
+                    } else {
+                        log('✅ Creator types function working!', 'success')
+                        log(`📋 Loaded ${functionData?.creatorTypes?.length || 0} categories`, 'info')
+                    }
+                }
+                
+                // Test insert with current schema
+                log('6. Testing sample insert...', 'info')
+                const testSubmission = {
+                    name: 'Setup Test User',
+                    email: `setup-test-${Date.now()}@example.com`,
+                    creator_types: ['technical-creation'],
+                    country: 'United States',
+                    device_id: 'setup-test',
+                    referral_source: 'setup-test',
+                    sync_source: 'setup-test'
+                }
+                
+                // Add privacy fields if they exist
+                if (hasPrivacyColumns) {
+                    testSubmission.allow_name_display = true
+                    testSubmission.allow_creator_type_display = true
+                    testSubmission.allow_comments_display = false
+                    testSubmission.include_in_first_hundred = true
+                    testSubmission.member_bio = 'This is a setup test submission'
+                }
+                
+                const { data: insertData, error: insertError } = await supabase
+                    .from('signups')
+                    .insert([testSubmission])
+                    .select()
+                
+                if (insertError) {
+                    log(`❌ Test insert failed: ${insertError.message}`, 'error')
+                } else {
+                    log('✅ Test signup successful!', 'success')
+                    log(`📝 Record ID: ${insertData[0]?.id}`, 'info')
+                }
+                
+                log('\n🎉 Setup check complete!', 'success')
+                
+            } catch (error) {
+                log(`❌ Setup failed: ${error.message}`, 'error')
+            }
+        }
+        
+        async function runSQLScripts() {
+            log('🔧 Note: SQL scripts need to be run manually in Supabase SQL Editor', 'warning')
+            log('📋 Required scripts:', 'info')
+            log('1. ENHANCED-SCHEMA.sql - Adds privacy columns', 'info')
+            log('2. CREATOR-TYPES-SCHEMA.sql - Creates creator types table', 'info')
+            log('', 'info')
+            log('🌐 Go to: https://supabase.com/dashboard/project/jgnyutkpxapaghderjmj/sql', 'info')
+        }
+        
+        async function testCreatorTypes() {
+            log('🧪 Testing creator types loading...', 'info')
+            
+            try {
+                const { data, error } = await supabase.rpc('get_creator_types_json')
+                
+                if (error) {
+                    log(`❌ Creator types function failed: ${error.message}`, 'error')
+                    return
+                }
+                
+                if (data && data.creatorTypes) {
+                    log('✅ Creator types loaded successfully!', 'success')
+                    log(`📋 Categories: ${data.creatorTypes.length}`, 'info')
+                    
+                    data.creatorTypes.forEach((category, index) => {
+                        const childCount = category.children ? category.children.length : 0
+                        log(`   ${index + 1}. ${category.label} (${childCount} subcategories)`, 'info')
+                    })
+                } else {
+                    log('⚠️  No creator types data returned', 'warning')
+                }
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error')
+            }
+        }
+        
+        // Auto-run setup on page load
+        document.addEventListener('DOMContentLoaded', runSetup)
+    </script>
+</body>
+</html>

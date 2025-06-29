@@ -625,11 +625,47 @@
             loadCreatorTypes() // Load creator types first
             setupPrivacyControls()
             setupCharacterCounter()
+            registerServiceWorker() // Enable offline functionality
             
             // Listen for connection changes
             window.addEventListener('online', handleOnline)
             window.addEventListener('offline', handleOffline)
         })
+
+        // Service Worker Registration for PWA/Offline functionality
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js')
+                    console.log('Service Worker registered successfully:', registration.scope)
+                    
+                    // Listen for service worker updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New content available, refresh page
+                                console.log('New content available, refreshing...')
+                                window.location.reload()
+                            }
+                        })
+                    })
+                    
+                    // Listen for messages from service worker
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        if (event.data.type === 'SYNC_PENDING_SUBMISSIONS') {
+                            console.log('Syncing pending submissions...')
+                            syncPendingFromLocal()
+                        }
+                    })
+                    
+                } catch (error) {
+                    console.log('Service Worker registration failed:', error)
+                }
+            } else {
+                console.log('Service Workers not supported')
+            }
+        }
 
         // Creator Type Selector Logic
         function renderCreatorTypes() {
@@ -830,6 +866,8 @@
         function handleOnline() {
             isOnline = true
             updateConnectionStatus()
+            // Auto-sync pending submissions when coming back online
+            setTimeout(() => syncPendingFromLocal(), 1000)
         }
 
         function handleOffline() {
@@ -909,7 +947,14 @@
                 if (success) {
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
-                    showSuccess('Welcome to Distributed Creatives! Your information has been saved.')
+                    
+                    // Send verification email
+                    const emailSent = await sendVerificationEmail(submission.email, submission.name)
+                    if (emailSent) {
+                        showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
+                    } else {
+                        showSuccess('Registration saved! Email verification will be sent shortly.')
+                    }
                 } else {
                     showSuccess('Saved locally. Will sync when connection improves.')
                 }
@@ -936,6 +981,17 @@
         // Database operations
         async function saveToDatabase(submission) {
             try {
+                // Generate verification token
+                const { data: tokenData, error: tokenError } = await supabase
+                    .rpc('generate_verification_token')
+                
+                if (tokenError) {
+                    console.error('Token generation error:', tokenError)
+                    return false
+                }
+                
+                const verificationToken = tokenData
+                
                 const { data, error } = await supabase
                     .from('members')
                     .insert([{
@@ -950,7 +1006,10 @@
                         include_in_genesis_group: submission.include_in_genesis_group,
                         device_id: submission.device_id,
                         referral_source: submission.referral_source,
-                        sync_source: 'conference'
+                        sync_source: 'conference',
+                        email_verified: false,
+                        verification_token: verificationToken,
+                        verification_sent_at: new Date().toISOString()
                     }])
                 
                 if (error) {
@@ -1009,6 +1068,29 @@
             if (index !== -1) {
                 submissions[index] = updatedSubmission
                 localStorage.setItem('dcSignups', JSON.stringify(submissions))
+            }
+        }
+
+        // Sync pending submissions when coming back online
+        async function syncPendingFromLocal() {
+            if (!isOnline) return
+            
+            const submissions = getLocalSubmissions()
+            const pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending')
+            
+            console.log(`Syncing ${pendingSubmissions.length} pending submissions...`)
+            
+            for (const submission of pendingSubmissions) {
+                const success = await saveToDatabase(submission)
+                if (success) {
+                    submission.sync_status = 'synced'
+                    updateLocalSubmission(submission)
+                    console.log(`Synced submission for ${submission.email}`)
+                } else {
+                    submission.attempts = (submission.attempts || 0) + 1
+                    updateLocalSubmission(submission)
+                    console.log(`Failed to sync submission for ${submission.email}, attempt ${submission.attempts}`)
+                }
             }
         }
 

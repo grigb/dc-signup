@@ -2,9 +2,10 @@
   "name": "dc-signup-system",
   "version": "1.0.0",
   "description": "An offline-first, progressive signup system for the Distributed Creatives network. Works as both a modal component across websites and a standalone conference registration tool.",
-  "main": "test-supabase-setup.js",
+  "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "python3 -m http.server 4100",
+    "test": "node test-supabase-setup.js"
   },
   "repository": {
     "type": "git",

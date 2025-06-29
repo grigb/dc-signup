@@ -1,8 +1,9 @@
 // Verify database setup immediately after SQL execution
 const { createClient } = require('@supabase/supabase-js')
 
-const supabaseUrl = 'https://jgnyutkpxapaghderjmj.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU5NDEsImV4cCI6MjA2Njc5MTk0MX0.kIHBUGVwkWN1zxkzHXYk8gpofr5sYmiQrOGkxpapu2I'
+// SECURITY WARNING: Key exposed in Git - needs rotation
+const supabaseUrl = process.env.SUPABASE_URL || 'https://jgnyutkpxapaghderjmj.supabase.co'
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'REPLACE_WITH_NEW_SECURE_KEY'
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 

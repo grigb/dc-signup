@@ -407,9 +407,10 @@
     </div>
 
     <script>
-        // Configuration
-        const SUPABASE_URL = 'https://jgnyutkpxapaghderjmj.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU5NDEsImV4cCI6MjA2Njc5MTk0MX0.kIHBUGVwkWN1zxkzHXYk8gpofr5sYmiQrOGkxpapu2I'
+        // Configuration - Use environment variables in production
+        // SECURITY: Previous JWT key was exposed and invalidated
+        const SUPABASE_URL = window.SUPABASE_URL || 'https://jgnyutkpxapaghderjmj.supabase.co'
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'REPLACE_WITH_NEW_SECURE_KEY'
         
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)

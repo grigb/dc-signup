@@ -3,14 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DC Signup - Enhanced Version</title>
+    <title>Join Genesis Members - Distributed Creatives</title>
+    <meta name="description" content="Join the founding members of Distributed Creatives - the creator-owned network advocating for artist rights and community building.">
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="DC Signup">
+    <meta name="apple-mobile-web-app-title" content="DC Genesis">
+    
+    <!-- SEO Meta Tags -->
+    <meta property="og:title" content="Join Genesis Members - Distributed Creatives">
+    <meta property="og:description" content="Join the founding members of the creator-owned network advocating for artist rights.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://signup.distributedcreatives.org">
+    
+    <!-- Security -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://jgnyutkpxapaghderjmj.supabase.co https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';">
+    
+    <!-- Preconnect to improve performance -->
+    <link rel="preconnect" href="https://jgnyutkpxapaghderjmj.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -391,6 +405,116 @@
             display: none;
         }
 
+        /* Confirmation Step Styles */
+        .confirmation-details {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .confirmation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .confirmation-item:last-child {
+            border-bottom: none;
+        }
+
+        .confirmation-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 120px;
+            margin-right: 16px;
+        }
+
+        .confirmation-value {
+            color: #1f2937;
+            flex: 1;
+            text-align: right;
+        }
+
+        .creator-types-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .creator-type-chip {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Offline Submissions Styles */
+        .offline-submission {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .offline-submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .offline-submission-name {
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        .offline-submission-time {
+            font-size: 12px;
+            color: #78350f;
+        }
+
+        .offline-submission-details {
+            font-size: 14px;
+            color: #92400e;
+        }
+
+        .no-offline-submissions {
+            text-align: center;
+            color: #64748b;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .view-toggle button {
+            background: none;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 8px 16px;
+            margin: 0 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .view-toggle button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
         @media (max-width: 480px) {
             .container {
                 margin: 10px;
@@ -405,10 +529,19 @@
         <div class="logo">
             <h1>Distributed Creatives</h1>
             <p>Join Our Community</p>
+            <div id="testModeIndicator" style="display: none; background: #f59e0b; color: white; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px; font-weight: 600;">🧪 TEST MODE: Offline Simulation</div>
         </div>
 
         <div class="connection-status" id="connectionStatus">
             🟡 Checking connection...
+        </div>
+        
+        <div id="syncStatus" style="display: none; background: #3b82f6; color: white; padding: 8px; border-radius: 4px; margin-bottom: 16px; text-align: center; font-size: 12px; font-weight: 600;"></div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle" id="viewToggle" style="display: none;">
+            <button id="formViewBtn" class="active">New Signup</button>
+            <button id="offlineViewBtn">View Offline (<span id="offlineCount">0</span>)</button>
         </div>
 
         <div class="success" id="successMessage"></div>
@@ -521,15 +654,58 @@
             </div>
 
             <button type="submit" class="submit-btn" id="submitBtn">
-                Join the Community
+                Review Submission
             </button>
         </form>
+
+        <!-- Confirmation Step -->
+        <div id="confirmationStep" style="display: none;">
+            <div class="logo">
+                <h2>📋 Review Your Submission</h2>
+                <p>Please confirm all details are correct before joining</p>
+            </div>
+
+            <div id="confirmationDetails" class="confirmation-details">
+                <!-- Details populated by JavaScript -->
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;">
+                    ← Edit Details
+                </button>
+                <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;">
+                    Join the Community
+                </button>
+            </div>
+        </div>
+
+        <!-- Offline Submissions Viewer -->
+        <div id="offlineViewer" style="display: none;">
+            <div class="logo">
+                <h2>📱 Offline Submissions</h2>
+                <p>Submissions waiting to sync</p>
+            </div>
+
+            <div id="offlineSubmissionsList">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="submit-btn" id="backToFormBtn" style="background: #64748b; flex: 1;">
+                    ← Back to Form
+                </button>
+                <button type="button" class="submit-btn" id="syncNowBtn" style="flex: 1;">
+                    Sync Now
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Configuration - Supabase connection
-        const SUPABASE_URL = 'https://jgnyutkpxapaghderjmj.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU5NDEsImV4cCI6MjA2Njc5MTk0MX0.kIHBUGVwkWN1zxkzHXYk8gpofr5sYmiQrOGkxpapu2I'
+        // Configuration - Use environment variables in production
+        // SECURITY: Previous JWT key was exposed and invalidated
+        const SUPABASE_URL = window.SUPABASE_URL || 'https://jgnyutkpxapaghderjmj.supabase.co'
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'REPLACE_WITH_NEW_SECURE_KEY'
         
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -543,6 +719,14 @@
         let currentLevel = []
         let navigationPath = []
         let otherValue = ""
+        
+        // Test mode - simulate offline behavior
+        const urlParams = new URLSearchParams(window.location.search)
+        const testOfflineMode = urlParams.get('offline') === 'true'
+        if (testOfflineMode) {
+            isOnline = false
+            console.log('🧪 TEST MODE: Simulating offline behavior')
+        }
         
         // DOM elements
         const form = document.getElementById('signupForm')
@@ -564,6 +748,12 @@
 
         // Load creator types from database
         async function loadCreatorTypes() {
+            // In test offline mode, skip database and use local file
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Skipping database, loading from local file')
+                return loadCreatorTypesFromFile()
+            }
+            
             try {
                 // Call the database function to get creator types as JSON
                 const { data, error } = await supabase.rpc('get_creator_types_json')
@@ -607,15 +797,61 @@
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            // Show test mode indicator if in test mode
+            if (testOfflineMode) {
+                document.getElementById('testModeIndicator').style.display = 'block'
+            }
+            
             updateConnectionStatus()
             loadCreatorTypes() // Load creator types first
             setupPrivacyControls()
             setupCharacterCounter()
+            registerServiceWorker() // Enable offline functionality
+            
+            // Auto-sync pending submissions on page load if online
+            if (isOnline && !testOfflineMode) {
+                setTimeout(() => syncPendingFromLocal(), 2000)
+            }
             
             // Listen for connection changes
             window.addEventListener('online', handleOnline)
             window.addEventListener('offline', handleOffline)
         })
+
+        // Service Worker Registration for PWA/Offline functionality
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js')
+                    console.log('Service Worker registered successfully:', registration.scope)
+                    
+                    // Listen for service worker updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New content available, refresh page
+                                console.log('New content available, refreshing...')
+                                window.location.reload()
+                            }
+                        })
+                    })
+                    
+                    // Listen for messages from service worker
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        if (event.data.type === 'SYNC_PENDING_SUBMISSIONS') {
+                            console.log('Syncing pending submissions...')
+                            syncPendingFromLocal()
+                        }
+                    })
+                    
+                } catch (error) {
+                    console.log('Service Worker registration failed:', error)
+                }
+            } else {
+                console.log('Service Workers not supported')
+            }
+        }
 
         // Creator Type Selector Logic
         function renderCreatorTypes() {
@@ -816,6 +1052,12 @@
         function handleOnline() {
             isOnline = true
             updateConnectionStatus()
+            // Auto-sync pending submissions when coming back online
+            setTimeout(() => {
+                if (!testOfflineMode) {
+                    syncPendingFromLocal()
+                }
+            }, 1000)
         }
 
         function handleOffline() {
@@ -833,7 +1075,10 @@
             }
         }
 
-        // Form submission handler
+        // Global variable to store current submission data
+        let currentSubmission = null
+
+        // Form submission handler - now shows confirmation step
         form.addEventListener('submit', async function(e) {
             e.preventDefault()
             
@@ -868,7 +1113,7 @@
             }
             
             // Create submission object
-            const submission = {
+            currentSubmission = {
                 id: generateId(),
                 name: name,
                 email: email,
@@ -886,6 +1131,12 @@
                 attempts: 0
             }
             
+            // Show confirmation step
+            showConfirmationStep(currentSubmission)
+        })
+
+        // Actual submission function called after confirmation
+        async function submitConfirmedData(submission) {
             // Always save locally first
             saveToLocal(submission)
             
@@ -895,7 +1146,14 @@
                 if (success) {
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
-                    showSuccess('Welcome to Distributed Creatives! Your information has been saved.')
+                    
+                    // Send verification email
+                    const emailSent = await sendVerificationEmail(submission.email, submission.name)
+                    if (emailSent) {
+                        showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
+                    } else {
+                        showSuccess('Registration saved! Email verification will be sent shortly.')
+                    }
                 } else {
                     showSuccess('Saved locally. Will sync when connection improves.')
                 }
@@ -905,7 +1163,8 @@
             
             form.reset()
             resetForm()
-        })
+            showFormStep()
+        }
 
         function resetForm() {
             selectedCreatorTypes = []
@@ -921,7 +1180,24 @@
 
         // Database operations
         async function saveToDatabase(submission) {
+            // In test offline mode, simulate database failure
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Simulating database connection failure')
+                return false
+            }
+            
             try {
+                // Generate verification token
+                const { data: tokenData, error: tokenError } = await supabase
+                    .rpc('generate_verification_token')
+                
+                if (tokenError) {
+                    console.error('Token generation error:', tokenError)
+                    return false
+                }
+                
+                const verificationToken = tokenData
+                
                 const { data, error } = await supabase
                     .from('members')
                     .insert([{
@@ -936,7 +1212,10 @@
                         include_in_genesis_group: submission.include_in_genesis_group,
                         device_id: submission.device_id,
                         referral_source: submission.referral_source,
-                        sync_source: 'conference'
+                        sync_source: 'conference',
+                        email_verified: false,
+                        verification_token: verificationToken,
+                        verification_sent_at: new Date().toISOString()
                     }])
                 
                 if (error) {
@@ -958,6 +1237,12 @@
             const localDupe = localSubmissions.some(sub => sub.email === email)
             
             if (localDupe) return true
+            
+            // In test offline mode, skip database check
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Skipping database duplicate check')
+                return false
+            }
             
             // Check database if online
             if (isOnline) {
@@ -998,6 +1283,75 @@
             }
         }
 
+        // Sync pending submissions when coming back online
+        async function syncPendingFromLocal() {
+            if (!isOnline) return
+            
+            const submissions = getLocalSubmissions()
+            const pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending')
+            
+            if (pendingSubmissions.length === 0) {
+                console.log('No pending submissions to sync')
+                return
+            }
+            
+            console.log(`Syncing ${pendingSubmissions.length} pending submissions...`)
+            showSyncStatus(`🔄 Syncing ${pendingSubmissions.length} offline submissions...`)
+            
+            let syncedCount = 0
+            let failedCount = 0
+            
+            for (const submission of pendingSubmissions) {
+                const success = await saveToDatabase(submission)
+                if (success) {
+                    submission.sync_status = 'synced'
+                    updateLocalSubmission(submission)
+                    syncedCount++
+                    console.log(`Synced submission for ${submission.email}`)
+                } else {
+                    submission.attempts = (submission.attempts || 0) + 1
+                    updateLocalSubmission(submission)
+                    failedCount++
+                    console.log(`Failed to sync submission for ${submission.email}, attempt ${submission.attempts}`)
+                }
+            }
+            
+            if (syncedCount > 0) {
+                showSyncStatus(`✅ Synced ${syncedCount} submissions successfully!`, 'success')
+                setTimeout(() => hideSyncStatus(), 3000)
+            }
+            
+            if (failedCount > 0) {
+                showSyncStatus(`⚠️ ${failedCount} submissions failed to sync`, 'warning')
+                setTimeout(() => hideSyncStatus(), 5000)
+            }
+        }
+        
+        function showSyncStatus(message, type = 'info') {
+            const syncStatus = document.getElementById('syncStatus')
+            syncStatus.textContent = message
+            syncStatus.style.display = 'block'
+            
+            // Set color based on type
+            switch(type) {
+                case 'success':
+                    syncStatus.style.background = '#10b981'
+                    break
+                case 'warning':
+                    syncStatus.style.background = '#f59e0b'
+                    break
+                case 'error':
+                    syncStatus.style.background = '#ef4444'
+                    break
+                default:
+                    syncStatus.style.background = '#3b82f6'
+            }
+        }
+        
+        function hideSyncStatus() {
+            document.getElementById('syncStatus').style.display = 'none'
+        }
+
         // UI helpers
         function showSuccess(message) {
             hideMessages()
@@ -1031,6 +1385,167 @@
             }
             return deviceId
         }
+
+        // Step Navigation Functions
+        function showFormStep() {
+            document.getElementById('signupForm').style.display = 'block'
+            document.getElementById('confirmationStep').style.display = 'none'
+            document.getElementById('offlineViewer').style.display = 'none'
+            updateViewToggle()
+        }
+
+        function showConfirmationStep(submission) {
+            document.getElementById('signupForm').style.display = 'none'
+            document.getElementById('confirmationStep').style.display = 'block'
+            document.getElementById('offlineViewer').style.display = 'none'
+            hideMessages()
+            
+            // Populate confirmation details
+            populateConfirmationDetails(submission)
+        }
+
+        function showOfflineViewer() {
+            document.getElementById('signupForm').style.display = 'none'
+            document.getElementById('confirmationStep').style.display = 'none'
+            document.getElementById('offlineViewer').style.display = 'block'
+            hideMessages()
+            
+            // Populate offline submissions
+            populateOfflineSubmissions()
+            updateViewToggle()
+        }
+
+        function populateConfirmationDetails(submission) {
+            const container = document.getElementById('confirmationDetails')
+            
+            // Format creator types for display
+            const creatorTypesDisplay = submission.creator_types.map(type => {
+                if (type.startsWith('other:')) {
+                    return type.replace('other:', 'Other: ')
+                }
+                return type
+            }).map(type => `<span class="creator-type-chip">${type}</span>`).join('')
+
+            container.innerHTML = `
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Name:</span>
+                    <span class="confirmation-value">${submission.name}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Email:</span>
+                    <span class="confirmation-value">${submission.email}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Creator Types:</span>
+                    <div class="confirmation-value">
+                        <div class="creator-types-list">${creatorTypesDisplay}</div>
+                    </div>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Country:</span>
+                    <span class="confirmation-value">${submission.country || 'Not specified'}</span>
+                </div>
+                ${submission.member_bio ? `
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Bio:</span>
+                    <span class="confirmation-value">${submission.member_bio}</span>
+                </div>
+                ` : ''}
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Genesis Group:</span>
+                    <span class="confirmation-value">${submission.include_in_genesis_group ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Display Name:</span>
+                    <span class="confirmation-value">${submission.allow_name_display ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Display Creator Types:</span>
+                    <span class="confirmation-value">${submission.allow_creator_type_display ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Display Comments:</span>
+                    <span class="confirmation-value">${submission.allow_comments_display ? 'Yes' : 'No'}</span>
+                </div>
+            `
+        }
+
+        function populateOfflineSubmissions() {
+            const container = document.getElementById('offlineSubmissionsList')
+            const submissions = getLocalSubmissions().filter(sub => sub.sync_status === 'pending')
+            
+            if (submissions.length === 0) {
+                container.innerHTML = '<div class="no-offline-submissions">No offline submissions waiting to sync</div>'
+                return
+            }
+
+            container.innerHTML = submissions.map(sub => `
+                <div class="offline-submission">
+                    <div class="offline-submission-header">
+                        <span class="offline-submission-name">${sub.name}</span>
+                        <span class="offline-submission-time">${new Date(sub.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div class="offline-submission-details">
+                        ${sub.email} • ${sub.creator_types.length} creator type(s)
+                        ${sub.country ? ` • ${sub.country}` : ''}
+                    </div>
+                </div>
+            `).join('')
+        }
+
+        function updateViewToggle() {
+            const offlineSubmissions = getLocalSubmissions().filter(sub => sub.sync_status === 'pending')
+            document.getElementById('offlineCount').textContent = offlineSubmissions.length
+            
+            // Show view toggle if there are offline submissions
+            if (offlineSubmissions.length > 0) {
+                document.getElementById('viewToggle').style.display = 'block'
+            }
+        }
+
+        // Event Listeners for new UI elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Confirmation step buttons
+            document.getElementById('editBtn').addEventListener('click', function() {
+                showFormStep()
+            })
+
+            document.getElementById('confirmSubmitBtn').addEventListener('click', async function() {
+                if (currentSubmission) {
+                    await submitConfirmedData(currentSubmission)
+                    currentSubmission = null
+                }
+            })
+
+            // View toggle buttons
+            document.getElementById('formViewBtn').addEventListener('click', function() {
+                showFormStep()
+                document.getElementById('formViewBtn').classList.add('active')
+                document.getElementById('offlineViewBtn').classList.remove('active')
+            })
+
+            document.getElementById('offlineViewBtn').addEventListener('click', function() {
+                showOfflineViewer()
+                document.getElementById('offlineViewBtn').classList.add('active')
+                document.getElementById('formViewBtn').classList.remove('active')
+            })
+
+            // Offline viewer buttons
+            document.getElementById('backToFormBtn').addEventListener('click', function() {
+                showFormStep()
+                document.getElementById('formViewBtn').classList.add('active')
+                document.getElementById('offlineViewBtn').classList.remove('active')
+            })
+
+            document.getElementById('syncNowBtn').addEventListener('click', async function() {
+                await syncPendingFromLocal()
+                populateOfflineSubmissions()
+                updateViewToggle()
+            })
+
+            // Initialize view toggle state
+            updateViewToggle()
+        })
     </script>
 </body>
 </html>

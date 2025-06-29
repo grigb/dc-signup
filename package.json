@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/grigb/dc-signup#readme",
   "dependencies": {
+    "@playwright/mcp": "^0.0.29",
     "@supabase/supabase-js": "^2.50.2"
   },
   "devDependencies": {

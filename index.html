@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC Signup System</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+        }
+        .version-links {
+            display: grid;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .version-link {
+            display: block;
+            padding: 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .version-link:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        .description {
+            color: #666;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .instructions {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .instructions h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .instructions p {
+            margin: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DC Signup System</h1>
+        <p class="description">
+            Offline-first signup system for Distributed Creatives network.<br>
+            Works on phones, tablets, and computers - even without internet!
+        </p>
+
+        <div class="instructions">
+            <h3>📱 For Mobile Users</h3>
+            <p><strong>Step 1:</strong> Tap the version below to open the signup form</p>
+            <p><strong>Step 2:</strong> Add to home screen for offline use</p>
+            <p><strong>Step 3:</strong> Works without internet once installed!</p>
+        </div>
+
+        <div class="version-links">
+            <a href="./v1-basic/" class="version-link">
+                📝 v1-basic: Simple Name + Email
+                <br><small>Basic form with local storage</small>
+            </a>
+        </div>
+
+        <div class="instructions">
+            <h3>🎯 Perfect for Conference Use</h3>
+            <p>• Works completely offline on iPad/tablet</p>
+            <p>• Saves data locally on device</p>
+            <p>• Share this link with anyone</p>
+            <p>• No app store downloads needed</p>
+        </div>
+    </div>
+</body>
+</html>

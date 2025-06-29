@@ -57,49 +57,51 @@ Building an offline-first, reusable signup system for the Distributed Creatives 
 
 ---
 
-## Phase 3: Offline-First Architecture (1-2 hours)
-**Goal**: Add sync capabilities and PWA features
+## Phase 3: Database Integration (1-2 hours)
+**Goal**: Add real database sync with offline-first approach
 
 ### Features
-- **IndexedDB storage**: Replace localStorage with robust offline storage
-- **Service Worker**: Basic PWA functionality
-- **Sync queue**: Prepare for remote sync
-- **Connection detection**: Online/offline status
-- **Export functionality**: Manual JSON export option
+- **Supabase database**: PostgreSQL with real-time features
+- **Dual storage**: Always save locally + sync to database when online
+- **Connection detection**: Online/offline status awareness
+- **Sync queue**: Queue submissions for when connection returns
+- **Duplicate prevention**: Check for existing emails
 
 ### Technical Stack
-- **Multiple files**: Split into proper structure
-- **Service Worker** for offline functionality
-- **IndexedDB** with Dexie.js library
-- **Webpack or Vite** for bundling
+- **Database**: Supabase (free tier, 50k MAU)
+- **Local storage**: Enhanced localStorage with sync metadata
+- **API calls**: Direct Supabase client integration
+- **Background sync**: Auto-retry failed submissions
 
 ### Deliverables
-- `v3-offline/` - Proper file structure
-- PWA functionality working
-- Offline storage with sync queue
+- `v3-database/` - Database-connected version
+- Supabase project configured
+- Dual storage working (local + remote)
+- Basic sync functionality
 
 ---
 
-## Phase 4: Remote Sync Integration (1-2 hours)
-**Goal**: Add backend sync and cloud storage
+## Phase 4: Advanced Sync Features (1-2 hours)
+**Goal**: Robust offline-first architecture
 
 ### Features
-- **Simple backend**: Basic Node.js/Express API
-- **Background sync**: Auto-sync when online
-- **Conflict resolution**: Handle duplicate submissions
-- **Admin view**: Simple list of all submissions
-- **Data export**: CSV download for organizers
+- **IndexedDB storage**: Replace localStorage with Dexie.js
+- **Background sync**: Automatic sync every 30 seconds when online
+- **Conflict resolution**: Handle duplicate submissions gracefully
+- **Device tracking**: Multi-iPad coordination for conferences
+- **Admin dashboard**: View all submissions and sync status
 
 ### Technical Stack
-- **Backend**: Node.js + Express
-- **Database**: JSON file or simple SQLite
-- **Deployment**: Vercel or similar
-- **API**: RESTful endpoints for CRUD operations
+- **IndexedDB** with Dexie.js library
+- **Service Worker** for background sync
+- **Supabase real-time** for live updates
+- **CSV export** for conference organizers
 
 ### Deliverables
-- `v4-sync/` - Full-stack application
-- Backend API deployed
-- Automatic sync working
+- `v4-advanced/` - Production-ready system
+- Background sync working
+- Admin dashboard for conference staff
+- Multi-device coordination
 
 ---
 

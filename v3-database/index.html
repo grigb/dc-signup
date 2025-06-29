@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC Signup - Database Version</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="DC Signup">
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .connection-status {
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .online {
+            background: #10b981;
+            color: white;
+        }
+
+        .offline {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: #fafafa;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .creator-types {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .creator-type-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .creator-type-item:hover {
+            background: #e2e8f0;
+        }
+
+        .creator-type-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .creator-type-item label {
+            margin: 0;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        .submit-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .secondary-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+        }
+
+        .secondary-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .sync-status {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .sync-status h4 {
+            margin-bottom: 4px;
+            color: #334155;
+        }
+
+        .sync-stats {
+            color: #64748b;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                padding: 24px;
+            }
+            
+            .creator-types {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Distributed Creatives</h1>
+            <p>Join Our Community</p>
+        </div>
+
+        <div class="connection-status" id="connectionStatus">
+            🟡 Checking connection...
+        </div>
+
+        <div class="sync-status" id="syncStatus" style="display: none;">
+            <h4>Sync Status</h4>
+            <div class="sync-stats" id="syncStats">
+                Local: 0 | Synced: 0 | Pending: 0
+            </div>
+        </div>
+
+        <div class="success" id="successMessage"></div>
+        <div class="error" id="errorMessage"></div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Creator Type (select all that apply) *</label>
+                <div class="creator-types">
+                    <div class="creator-type-item">
+                        <input type="checkbox" id="traditional" value="Traditional Arts">
+                        <label for="traditional">Traditional Arts</label>
+                    </div>
+                    <div class="creator-type-item">
+                        <input type="checkbox" id="technical" value="Technical Creation">
+                        <label for="technical">Technical Creation</label>
+                    </div>
+                    <div class="creator-type-item">
+                        <input type="checkbox" id="knowledge" value="Knowledge Creation">
+                        <label for="knowledge">Knowledge Creation</label>
+                    </div>
+                    <div class="creator-type-item">
+                        <input type="checkbox" id="design" value="Design Fields">
+                        <label for="design">Design Fields</label>
+                    </div>
+                    <div class="creator-type-item">
+                        <input type="checkbox" id="content" value="Content Creation">
+                        <label for="content">Content Creation</label>
+                    </div>
+                    <div class="creator-type-item">
+                        <input type="checkbox" id="web3" value="Web3 & Digital Assets">
+                        <label for="web3">Web3 & Digital</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="country">Country</label>
+                <select id="country" name="country">
+                    <option value="">Select your country</option>
+                    <option value="United States">United States</option>
+                    <option value="Canada">Canada</option>
+                    <option value="United Kingdom">United Kingdom</option>
+                    <option value="Australia">Australia</option>
+                    <option value="Germany">Germany</option>
+                    <option value="France">France</option>
+                    <option value="Japan">Japan</option>
+                    <option value="Brazil">Brazil</option>
+                    <option value="India">India</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Join Now
+            </button>
+        </form>
+
+        <button class="secondary-btn" onclick="viewSyncStatus()">
+            View Sync Status
+        </button>
+
+        <button class="secondary-btn" onclick="forceSyncAll()">
+            Force Sync All
+        </button>
+    </div>
+
+    <script>
+        // Configuration - UPDATE THESE WITH YOUR SUPABASE DETAILS
+        const SUPABASE_URL = 'https://your-project.supabase.co'
+        const SUPABASE_ANON_KEY = 'your-anon-key-here'
+        
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        
+        // State management
+        let isOnline = navigator.onLine
+        let syncInProgress = false
+        
+        // DOM elements
+        const form = document.getElementById('signupForm')
+        const connectionStatus = document.getElementById('connectionStatus')
+        const successMessage = document.getElementById('successMessage')
+        const errorMessage = document.getElementById('errorMessage')
+        const syncStatus = document.getElementById('syncStatus')
+        const syncStats = document.getElementById('syncStats')
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConnectionStatus()
+            updateSyncStatus()
+            checkPendingSync()
+            
+            // Listen for connection changes
+            window.addEventListener('online', handleOnline)
+            window.addEventListener('offline', handleOffline)
+            
+            // Auto-sync every 30 seconds when online
+            setInterval(() => {
+                if (isOnline && !syncInProgress) {
+                    syncPendingSubmissions()
+                }
+            }, 30000)
+        })
+
+        // Connection handlers
+        function handleOnline() {
+            isOnline = true
+            updateConnectionStatus()
+            syncPendingSubmissions()
+        }
+
+        function handleOffline() {
+            isOnline = false
+            updateConnectionStatus()
+        }
+
+        function updateConnectionStatus() {
+            if (isOnline) {
+                connectionStatus.innerHTML = '🟢 Online - Saves to database'
+                connectionStatus.className = 'connection-status online'
+            } else {
+                connectionStatus.innerHTML = '🔴 Offline - Saves locally only'
+                connectionStatus.className = 'connection-status offline'
+            }
+        }
+
+        // Form submission handler
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault()
+            
+            const formData = new FormData(form)
+            const name = formData.get('name').trim()
+            const email = formData.get('email').trim()
+            const country = formData.get('country')
+            
+            // Get selected creator types
+            const creatorTypes = []
+            const checkboxes = document.querySelectorAll('.creator-types input[type="checkbox"]:checked')
+            checkboxes.forEach(cb => creatorTypes.push(cb.value))
+            
+            // Validate
+            if (!name || !email || creatorTypes.length === 0) {
+                showError('Please fill in all required fields and select at least one creator type.')
+                return
+            }
+
+            // Check for duplicate email
+            if (await isDuplicateEmail(email)) {
+                showError('This email has already been registered.')
+                return
+            }
+            
+            // Create submission object
+            const submission = {
+                id: generateId(),
+                name: name,
+                email: email,
+                creator_types: creatorTypes,
+                country: country || null,
+                device_id: getDeviceId(),
+                referral_source: 'conference',
+                timestamp: new Date().toISOString(),
+                sync_status: 'pending',
+                attempts: 0
+            }
+            
+            // Always save locally first
+            saveToLocal(submission)
+            
+            // Try to save to database if online
+            if (isOnline) {
+                const success = await saveToDatabase(submission)
+                if (success) {
+                    submission.sync_status = 'synced'
+                    updateLocalSubmission(submission)
+                    showSuccess('Saved successfully to database!')
+                } else {
+                    showSuccess('Saved locally. Will sync when connection improves.')
+                }
+            } else {
+                showSuccess('Saved locally. Will sync when online.')
+            }
+            
+            form.reset()
+            updateSyncStatus()
+        })
+
+        // Database operations
+        async function saveToDatabase(submission) {
+            try {
+                const { data, error } = await supabase
+                    .from('signups')
+                    .insert([{
+                        name: submission.name,
+                        email: submission.email,
+                        creator_types: submission.creator_types,
+                        country: submission.country,
+                        device_id: submission.device_id,
+                        referral_source: submission.referral_source,
+                        sync_source: 'conference'
+                    }])
+                
+                if (error) {
+                    console.error('Database save error:', error)
+                    return false
+                }
+                
+                console.log('Saved to database:', data)
+                return true
+            } catch (error) {
+                console.error('Database connection error:', error)
+                return false
+            }
+        }
+
+        async function isDuplicateEmail(email) {
+            // Check local storage first
+            const localSubmissions = getLocalSubmissions()
+            const localDupe = localSubmissions.some(sub => sub.email === email)
+            
+            if (localDupe) return true
+            
+            // Check database if online
+            if (isOnline) {
+                try {
+                    const { data, error } = await supabase
+                        .from('signups')
+                        .select('email')
+                        .eq('email', email)
+                        .limit(1)
+                    
+                    return data && data.length > 0
+                } catch (error) {
+                    console.error('Duplicate check error:', error)
+                    return false
+                }
+            }
+            
+            return false
+        }
+
+        // Local storage operations
+        function saveToLocal(submission) {
+            const submissions = getLocalSubmissions()
+            submissions.push(submission)
+            localStorage.setItem('dcSignups', JSON.stringify(submissions))
+        }
+
+        function getLocalSubmissions() {
+            return JSON.parse(localStorage.getItem('dcSignups') || '[]')
+        }
+
+        function updateLocalSubmission(updatedSubmission) {
+            const submissions = getLocalSubmissions()
+            const index = submissions.findIndex(sub => sub.id === updatedSubmission.id)
+            if (index !== -1) {
+                submissions[index] = updatedSubmission
+                localStorage.setItem('dcSignups', JSON.stringify(submissions))
+            }
+        }
+
+        // Sync operations
+        async function syncPendingSubmissions() {
+            if (!isOnline || syncInProgress) return
+            
+            syncInProgress = true
+            const submissions = getLocalSubmissions()
+            const pending = submissions.filter(sub => sub.sync_status === 'pending')
+            
+            console.log(`Syncing ${pending.length} pending submissions...`)
+            
+            for (const submission of pending) {
+                const success = await saveToDatabase(submission)
+                if (success) {
+                    submission.sync_status = 'synced'
+                    updateLocalSubmission(submission)
+                } else {
+                    submission.attempts = (submission.attempts || 0) + 1
+                    updateLocalSubmission(submission)
+                }
+            }
+            
+            syncInProgress = false
+            updateSyncStatus()
+        }
+
+        function checkPendingSync() {
+            const submissions = getLocalSubmissions()
+            const pending = submissions.filter(sub => sub.sync_status === 'pending')
+            
+            if (pending.length > 0 && isOnline) {
+                setTimeout(() => syncPendingSubmissions(), 2000)
+            }
+        }
+
+        // UI helpers
+        function updateSyncStatus() {
+            const submissions = getLocalSubmissions()
+            const total = submissions.length
+            const synced = submissions.filter(sub => sub.sync_status === 'synced').length
+            const pending = submissions.filter(sub => sub.sync_status === 'pending').length
+            
+            syncStats.textContent = `Local: ${total} | Synced: ${synced} | Pending: ${pending}`
+            
+            if (total > 0) {
+                syncStatus.style.display = 'block'
+            }
+        }
+
+        function viewSyncStatus() {
+            updateSyncStatus()
+            const submissions = getLocalSubmissions()
+            
+            if (submissions.length === 0) {
+                showError('No submissions yet.')
+                return
+            }
+            
+            const details = submissions.map(sub => 
+                `${sub.name} (${sub.email}) - ${sub.sync_status}`
+            ).join('\n')
+            
+            alert(`Submissions:\n\n${details}`)
+        }
+
+        function forceSyncAll() {
+            if (!isOnline) {
+                showError('Cannot sync while offline.')
+                return
+            }
+            
+            syncPendingSubmissions()
+            showSuccess('Sync initiated...')
+        }
+
+        function showSuccess(message) {
+            hideMessages()
+            successMessage.textContent = message
+            successMessage.style.display = 'block'
+            setTimeout(() => successMessage.style.display = 'none', 4000)
+        }
+
+        function showError(message) {
+            hideMessages()
+            errorMessage.textContent = message
+            errorMessage.style.display = 'block'
+            setTimeout(() => errorMessage.style.display = 'none', 5000)
+        }
+
+        function hideMessages() {
+            successMessage.style.display = 'none'
+            errorMessage.style.display = 'none'
+        }
+
+        // Utility functions
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2)
+        }
+
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('dcDeviceId')
+            if (!deviceId) {
+                deviceId = 'device-' + generateId()
+                localStorage.setItem('dcDeviceId', deviceId)
+            }
+            return deviceId
+        }
+    </script>
+</body>
+</html>

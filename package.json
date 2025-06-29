@@ -20,5 +20,9 @@
   "homepage": "https://github.com/grigb/dc-signup#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.50.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.1",
+    "playwright": "^1.53.1"
   }
 }

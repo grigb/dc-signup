@@ -242,7 +242,8 @@
         .selected-types {
             margin-top: 12px;
             display: flex;
-            flex-wrap: gap: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .selected-type-tag {
@@ -499,10 +500,10 @@
                 </div>
                 
                 <div class="privacy-option">
-                    <input type="checkbox" id="includeInFirstHundred" name="includeInFirstHundred">
-                    <label for="includeInFirstHundred">
-                        Include me in the "First 150 Members" showcase
-                        <div class="privacy-description">Feature me as an early community member</div>
+                    <input type="checkbox" id="includeInGenesisGroup" name="includeInGenesisGroup">
+                    <label for="includeInGenesisGroup">
+                        Include me in the "Genesis Members" showcase
+                        <div class="privacy-description">Feature me as a founding community member</div>
                     </label>
                 </div>
             </div>
@@ -539,7 +540,7 @@
         // State management
         let isOnline = navigator.onLine
         let selectedCreatorTypes = []
-        let currentLevel = creatorTypes
+        let currentLevel = []
         let navigationPath = []
         let otherValue = ""
         
@@ -575,6 +576,7 @@
                 
                 if (data && data.creatorTypes) {
                     creatorTypes = data.creatorTypes
+                    currentLevel = creatorTypes  // Set current level to top-level categories
                     console.log('Creator types loaded from database:', data.version)
                     renderCreatorTypes()
                 } else {
@@ -594,6 +596,7 @@
                 const response = await fetch('./creator-types.json')
                 const data = await response.json()
                 creatorTypes = data.creatorTypes
+                currentLevel = creatorTypes  // Set current level to top-level categories
                 console.log('Creator types loaded from file:', data.version)
                 renderCreatorTypes()
             } catch (error) {
@@ -774,7 +777,7 @@
 
         // Privacy Controls
         function setupPrivacyControls() {
-            const privacyCheckboxes = ['allowNameDisplay', 'allowCreatorTypeDisplay', 'allowCommentsDisplay', 'includeInFirstHundred']
+            const privacyCheckboxes = ['allowNameDisplay', 'allowCreatorTypeDisplay', 'allowCommentsDisplay', 'includeInGenesisGroup']
             
             privacyCheckboxes.forEach(id => {
                 const checkbox = document.getElementById(id)
@@ -786,7 +789,7 @@
             const anyDisplayAllowed = document.getElementById('allowNameDisplay').checked ||
                                     document.getElementById('allowCreatorTypeDisplay').checked ||
                                     document.getElementById('allowCommentsDisplay').checked ||
-                                    document.getElementById('includeInFirstHundred').checked
+                                    document.getElementById('includeInGenesisGroup').checked
             
             if (anyDisplayAllowed) {
                 memberShowcase.classList.add('visible')
@@ -875,7 +878,7 @@
                 allow_name_display: document.getElementById('allowNameDisplay').checked,
                 allow_creator_type_display: document.getElementById('allowCreatorTypeDisplay').checked,
                 allow_comments_display: document.getElementById('allowCommentsDisplay').checked,
-                include_in_first_hundred: document.getElementById('includeInFirstHundred').checked,
+                include_in_genesis_group: document.getElementById('includeInGenesisGroup').checked,
                 device_id: getDeviceId(),
                 referral_source: 'conference',
                 timestamp: new Date().toISOString(),
@@ -920,7 +923,7 @@
         async function saveToDatabase(submission) {
             try {
                 const { data, error } = await supabase
-                    .from('signups')
+                    .from('members')
                     .insert([{
                         name: submission.name,
                         email: submission.email,
@@ -930,7 +933,7 @@
                         allow_name_display: submission.allow_name_display,
                         allow_creator_type_display: submission.allow_creator_type_display,
                         allow_comments_display: submission.allow_comments_display,
-                        include_in_first_hundred: submission.include_in_first_hundred,
+                        include_in_genesis_group: submission.include_in_genesis_group,
                         device_id: submission.device_id,
                         referral_source: submission.referral_source,
                         sync_source: 'conference'
@@ -960,7 +963,7 @@
             if (isOnline) {
                 try {
                     const { data, error } = await supabase
-                        .from('signups')
+                        .from('members')
                         .select('email')
                         .eq('email', email)
                         .limit(1)

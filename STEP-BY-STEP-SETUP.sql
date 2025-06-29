@@ -1,8 +1,8 @@
--- COMPLETE DATABASE SETUP
--- Run this entire script in Supabase SQL Editor to set up everything
+-- MEMBERS DATABASE SETUP - Complete setup for DC signup system
+-- Run this entire script in Supabase SQL Editor
 
--- 1. Create signups table with all fields
-CREATE TABLE IF NOT EXISTS signups (
+-- STEP 1: Create members table with ALL columns from the start
+CREATE TABLE IF NOT EXISTS members (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS signups (
   allow_name_display BOOLEAN DEFAULT false,
   allow_creator_type_display BOOLEAN DEFAULT false,
   allow_comments_display BOOLEAN DEFAULT false,
-  include_in_first_hundred BOOLEAN DEFAULT false,
+  include_in_genesis_group BOOLEAN DEFAULT false,
   device_id VARCHAR(100),
   referral_source VARCHAR(100) DEFAULT 'conference',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -21,26 +21,26 @@ CREATE TABLE IF NOT EXISTS signups (
 );
 
 -- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_signups_email ON signups(email);
-CREATE INDEX IF NOT EXISTS idx_signups_created_at ON signups(created_at);
-CREATE INDEX IF NOT EXISTS idx_signups_device_id ON signups(device_id);
-CREATE INDEX IF NOT EXISTS idx_signups_allow_name_display ON signups(allow_name_display);
-CREATE INDEX IF NOT EXISTS idx_signups_include_in_first_hundred ON signups(include_in_first_hundred);
+CREATE INDEX IF NOT EXISTS idx_members_email ON members(email);
+CREATE INDEX IF NOT EXISTS idx_members_created_at ON members(created_at);
+CREATE INDEX IF NOT EXISTS idx_members_device_id ON members(device_id);
+CREATE INDEX IF NOT EXISTS idx_members_allow_name_display ON members(allow_name_display);
+CREATE INDEX IF NOT EXISTS idx_members_include_in_genesis_group ON members(include_in_genesis_group);
 
 -- Enable Row Level Security (RLS)
-ALTER TABLE signups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 
--- Create policies for signups table
-DROP POLICY IF EXISTS "Allow public inserts" ON signups;
-DROP POLICY IF EXISTS "Allow public selects" ON signups;
+-- Create policies for members table
+DROP POLICY IF EXISTS "Allow public inserts" ON members;
+DROP POLICY IF EXISTS "Allow public selects" ON members;
 
-CREATE POLICY "Allow public inserts" ON signups
+CREATE POLICY "Allow public inserts" ON members
   FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Allow public selects" ON signups
+CREATE POLICY "Allow public selects" ON members
   FOR SELECT USING (true);
 
--- 2. Create creator_types table for hierarchical creator types
+-- STEP 2: Create creator_types table
 CREATE TABLE IF NOT EXISTS creator_types (
   id VARCHAR(100) PRIMARY KEY,
   label VARCHAR(255) NOT NULL,
@@ -52,34 +52,14 @@ CREATE TABLE IF NOT EXISTS creator_types (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for creator_types
-CREATE INDEX IF NOT EXISTS idx_creator_types_parent_id ON creator_types(parent_id);
-CREATE INDEX IF NOT EXISTS idx_creator_types_sort_order ON creator_types(sort_order);
-CREATE INDEX IF NOT EXISTS idx_creator_types_active ON creator_types(is_active);
-
 -- Enable RLS for creator_types
 ALTER TABLE creator_types ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for creator_types
 DROP POLICY IF EXISTS "Allow public reads" ON creator_types;
-DROP POLICY IF EXISTS "Allow authenticated inserts" ON creator_types;
-DROP POLICY IF EXISTS "Allow authenticated updates" ON creator_types;
-DROP POLICY IF EXISTS "Allow authenticated deletes" ON creator_types;
+CREATE POLICY "Allow public reads" ON creator_types FOR SELECT USING (true);
 
-CREATE POLICY "Allow public reads" ON creator_types
-  FOR SELECT USING (true);
-
-CREATE POLICY "Allow authenticated inserts" ON creator_types
-  FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Allow authenticated updates" ON creator_types
-  FOR UPDATE TO authenticated USING (true);
-
-CREATE POLICY "Allow authenticated deletes" ON creator_types
-  FOR DELETE TO authenticated USING (true);
-
--- 3. Insert initial creator types data
--- Clear existing data first
+-- STEP 3: Insert creator types data
 DELETE FROM creator_types;
 
 -- Top-level categories
@@ -138,59 +118,7 @@ INSERT INTO creator_types (id, label, description, parent_id, sort_order) VALUES
 ('digital-collectibles', 'Digital Collectibles', 'Virtual items, game assets', 'web3-digital-assets', 3),
 ('decentralized-applications', 'Decentralized Applications', 'DeFi, DAOs, Web3 platforms', 'web3-digital-assets', 4);
 
--- 4. Create views for website display (respects privacy settings)
-CREATE OR REPLACE VIEW public_member_showcase AS
-SELECT 
-  id,
-  CASE 
-    WHEN allow_name_display = true THEN name 
-    ELSE 'Anonymous Member' 
-  END as display_name,
-  CASE 
-    WHEN allow_creator_type_display = true THEN creator_types 
-    ELSE NULL 
-  END as display_creator_types,
-  CASE 
-    WHEN allow_comments_display = true THEN member_bio 
-    ELSE NULL 
-  END as display_bio,
-  country,
-  created_at
-FROM signups 
-WHERE include_in_first_hundred = true
-ORDER BY created_at ASC;
-
--- Grant access to the view
-GRANT SELECT ON public_member_showcase TO anon;
-GRANT SELECT ON public_member_showcase TO authenticated;
-
--- Create aggregation view for public stats
-CREATE OR REPLACE VIEW public_stats AS
-SELECT 
-  COUNT(*) as total_members,
-  COUNT(CASE WHEN include_in_first_hundred = true THEN 1 END) as first_hundred_members,
-  COUNT(CASE WHEN allow_name_display = true THEN 1 END) as members_showing_names,
-  COUNT(CASE WHEN member_bio IS NOT NULL AND allow_comments_display = true THEN 1 END) as members_with_bios,
-  jsonb_object_agg(
-    CASE 
-      WHEN country IS NOT NULL THEN country 
-      ELSE 'Unknown' 
-    END, 
-    country_count
-  ) as members_by_country
-FROM (
-  SELECT 
-    country,
-    COUNT(*) as country_count
-  FROM signups 
-  GROUP BY country
-) country_stats;
-
--- Grant access to stats view
-GRANT SELECT ON public_stats TO anon;
-GRANT SELECT ON public_stats TO authenticated;
-
--- 5. Create function to get creator types as JSON (for the app)
+-- STEP 4: Create the function (must be after creator_types table exists)
 CREATE OR REPLACE FUNCTION get_creator_types_json()
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -270,8 +198,48 @@ $$;
 GRANT EXECUTE ON FUNCTION get_creator_types_json() TO anon;
 GRANT EXECUTE ON FUNCTION get_creator_types_json() TO authenticated;
 
--- 6. Insert a test record to verify everything works
-INSERT INTO signups (
+-- STEP 5: Create views
+CREATE OR REPLACE VIEW genesis_member_showcase AS
+SELECT 
+  id,
+  CASE 
+    WHEN allow_name_display = true THEN name 
+    ELSE 'Anonymous Member' 
+  END as display_name,
+  CASE 
+    WHEN allow_creator_type_display = true THEN creator_types 
+    ELSE NULL 
+  END as display_creator_types,
+  CASE 
+    WHEN allow_comments_display = true THEN member_bio 
+    ELSE NULL 
+  END as display_bio,
+  country,
+  created_at
+FROM members 
+WHERE include_in_genesis_group = true
+ORDER BY created_at ASC;
+
+-- Grant access to the view
+GRANT SELECT ON genesis_member_showcase TO anon;
+GRANT SELECT ON genesis_member_showcase TO authenticated;
+
+-- Create aggregation view for member stats
+CREATE OR REPLACE VIEW member_stats AS
+SELECT 
+  COUNT(*) as total_members,
+  COUNT(CASE WHEN include_in_genesis_group = true THEN 1 END) as genesis_group_members,
+  COUNT(CASE WHEN allow_name_display = true THEN 1 END) as members_showing_names,
+  COUNT(CASE WHEN member_bio IS NOT NULL AND allow_comments_display = true THEN 1 END) as members_with_bios,
+  COUNT(DISTINCT country) as countries_represented
+FROM members;
+
+-- Grant access to stats view
+GRANT SELECT ON member_stats TO anon;
+GRANT SELECT ON member_stats TO authenticated;
+
+-- STEP 6: Insert test record
+INSERT INTO members (
   name, 
   email, 
   creator_types, 
@@ -280,16 +248,16 @@ INSERT INTO signups (
   allow_name_display,
   allow_creator_type_display, 
   allow_comments_display,
-  include_in_first_hundred,
+  include_in_genesis_group,
   device_id,
   referral_source,
   sync_source
 ) VALUES (
-  'Setup Test User',
-  'setup-test@distributedcreatives.org',
+  'Genesis Test Member',
+  'genesis-test@distributedcreatives.org',
   '["technical-creation", "design-fields"]'::jsonb,
   'United States',
-  'This is a test record created during database setup.',
+  'This is a test record for the Genesis group setup.',
   true,
   true,
   true,
@@ -299,18 +267,26 @@ INSERT INTO signups (
   'setup-script'
 );
 
--- 7. Test the creator types function
+-- STEP 7: Test everything
+SELECT 'Testing creator types function...' as test_step;
 SELECT get_creator_types_json();
+
+SELECT 'Testing member stats...' as test_step;
+SELECT * FROM member_stats;
+
+SELECT 'Testing Genesis showcase...' as test_step;
+SELECT * FROM genesis_member_showcase;
 
 -- Success message
 DO $$
 BEGIN
-  RAISE NOTICE '🎉 Database setup complete!';
-  RAISE NOTICE '✅ signups table created with privacy fields';
+  RAISE NOTICE '🎉 Members database setup complete!';
+  RAISE NOTICE '✅ members table created with Genesis group fields';
   RAISE NOTICE '✅ creator_types table created with hierarchical data';
-  RAISE NOTICE '✅ Views created for website integration';
+  RAISE NOTICE '✅ Views created for Genesis member showcase';
   RAISE NOTICE '✅ Function created for JSON creator types';
-  RAISE NOTICE '✅ Test record inserted';
+  RAISE NOTICE '✅ Test record inserted in Genesis group';
   RAISE NOTICE '';
   RAISE NOTICE '🚀 Ready to test v4-enhanced/index.html!';
+  RAISE NOTICE 'Note: Frontend will use "members" table instead of "signups"';
 END $$;

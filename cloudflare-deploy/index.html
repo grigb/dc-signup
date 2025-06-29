@@ -419,6 +419,7 @@
         <div class="logo">
             <h1>Distributed Creatives</h1>
             <p>Join Our Community</p>
+            <div id="testModeIndicator" style="display: none; background: #f59e0b; color: white; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px; font-weight: 600;">🧪 TEST MODE: Offline Simulation</div>
         </div>
 
         <div class="connection-status" id="connectionStatus">
@@ -558,6 +559,14 @@
         let navigationPath = []
         let otherValue = ""
         
+        // Test mode - simulate offline behavior
+        const urlParams = new URLSearchParams(window.location.search)
+        const testOfflineMode = urlParams.get('offline') === 'true'
+        if (testOfflineMode) {
+            isOnline = false
+            console.log('🧪 TEST MODE: Simulating offline behavior')
+        }
+        
         // DOM elements
         const form = document.getElementById('signupForm')
         const connectionStatus = document.getElementById('connectionStatus')
@@ -578,6 +587,12 @@
 
         // Load creator types from database
         async function loadCreatorTypes() {
+            // In test offline mode, skip database and use local file
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Skipping database, loading from local file')
+                return loadCreatorTypesFromFile()
+            }
+            
             try {
                 // Call the database function to get creator types as JSON
                 const { data, error } = await supabase.rpc('get_creator_types_json')
@@ -621,6 +636,11 @@
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            // Show test mode indicator if in test mode
+            if (testOfflineMode) {
+                document.getElementById('testModeIndicator').style.display = 'block'
+            }
+            
             updateConnectionStatus()
             loadCreatorTypes() // Load creator types first
             setupPrivacyControls()
@@ -980,6 +1000,12 @@
 
         // Database operations
         async function saveToDatabase(submission) {
+            // In test offline mode, simulate database failure
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Simulating database connection failure')
+                return false
+            }
+            
             try {
                 // Generate verification token
                 const { data: tokenData, error: tokenError } = await supabase
@@ -1031,6 +1057,12 @@
             const localDupe = localSubmissions.some(sub => sub.email === email)
             
             if (localDupe) return true
+            
+            // In test offline mode, skip database check
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Skipping database duplicate check')
+                return false
+            }
             
             // Check database if online
             if (isOnline) {

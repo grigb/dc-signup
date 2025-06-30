@@ -1047,7 +1047,7 @@
     <div class="container">
         <!-- Fixed Header with Logo -->
         <div class="logo" onclick="goToHomepage()">
-            <img src="./assets/images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
+            <img src="./assets/images/distributed-creatives-logo-320px.png?v=2" alt="Distributed Creatives Logo">
             <h1>Distributed Creatives</h1>
             <p>Join Our Community</p>
             <div id="testModeIndicator" style="display: none; background: #f59e0b; color: white; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px; font-weight: 600;">🧪 TEST MODE: Offline Simulation</div>
@@ -1204,7 +1204,7 @@
 
                 <div class="fixed-bottom">
                     <div style="display: flex; gap: 12px;">
-                        <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;">
+                        <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;" onclick="handleEditDetails()">
                             ← Edit Details
                         </button>
                         <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;">
@@ -1219,7 +1219,7 @@
         <div id="offlineViewer" style="display: none;">
             <div class="offline-container">
                 <div class="logo" onclick="goToHomepage()">
-                    <img src="./assets/images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
+                    <img src="./assets/images/distributed-creatives-logo-320px.png?v=2" alt="Distributed Creatives Logo">
                     <h2>📱 Offline Submissions</h2>
                     <p>Submissions waiting to sync</p>
                 </div>
@@ -2114,21 +2114,91 @@
 
         // Step Navigation Functions
         function showFormStep() {
-            document.getElementById('signupForm').style.display = 'block'
-            document.querySelector('.fixed-bottom').style.display = 'block'
-            document.getElementById('confirmationStep').style.display = 'none'
-            document.getElementById('offlineViewer').style.display = 'none'
+            // More aggressive hiding of confirmation step
+            const confirmationStep = document.getElementById('confirmationStep')
+            if (confirmationStep) {
+                confirmationStep.style.display = 'none'
+                confirmationStep.style.visibility = 'hidden'
+                confirmationStep.style.zIndex = '-1'
+            }
+            
+            // Hide offline viewer as well
+            const offlineViewer = document.getElementById('offlineViewer')
+            if (offlineViewer) {
+                offlineViewer.style.display = 'none'
+                offlineViewer.style.visibility = 'hidden'
+                offlineViewer.style.zIndex = '-1'
+            }
+            
+            // Show the form and its parent scrollable content
+            const formElement = document.getElementById('signupForm')
+            if (formElement) {
+                formElement.style.display = 'block'
+                // Get the parent scrollable-content that contains the form
+                const scrollableContent = formElement.parentElement
+                if (scrollableContent && scrollableContent.classList.contains('scrollable-content')) {
+                    scrollableContent.style.display = 'block'
+                }
+            }
+            
+            // Show the submit button - find the one with submitBtn
+            const allFixedBottoms = document.querySelectorAll('.fixed-bottom')
+            allFixedBottoms.forEach(fb => {
+                if (fb.querySelector('#submitBtn')) {
+                    fb.style.display = 'block'
+                }
+            })
+            
+            // Show other UI elements that should be visible with the form
+            const viewToggle = document.getElementById('viewToggle')
+            if (viewToggle) viewToggle.style.display = 'none'
+            
+            const connectionStatus = document.getElementById('connectionStatus')
+            if (connectionStatus) connectionStatus.style.display = 'block'
+            
             updateViewToggle()
         }
 
         function showConfirmationStep(submission) {
             // Hide the entire form section including the submit button
-            document.getElementById('signupForm').style.display = 'none'
-            document.querySelector('.fixed-bottom').style.display = 'none'
+            const formElement = document.getElementById('signupForm')
+            if (formElement) {
+                formElement.style.display = 'none'
+                // Get the parent scrollable-content that contains the form
+                const scrollableContent = formElement.parentElement
+                if (scrollableContent && scrollableContent.classList.contains('scrollable-content')) {
+                    scrollableContent.style.display = 'none'
+                }
+            }
             
-            // Show confirmation step with flex layout to fill container
-            document.getElementById('confirmationStep').style.display = 'flex'
-            document.getElementById('offlineViewer').style.display = 'none'
+            // Hide the submit button - find the one with submitBtn
+            const allFixedBottoms = document.querySelectorAll('.fixed-bottom')
+            allFixedBottoms.forEach(fb => {
+                if (fb.querySelector('#submitBtn')) {
+                    fb.style.display = 'none'
+                }
+            })
+            
+            // Hide other form-related UI elements
+            const connectionStatus = document.getElementById('connectionStatus')
+            if (connectionStatus) connectionStatus.style.display = 'none'
+            
+            // Show confirmation step with proper visibility and z-index
+            const confirmationStep = document.getElementById('confirmationStep')
+            if (confirmationStep) {
+                confirmationStep.style.display = 'flex'
+                confirmationStep.style.visibility = 'visible'
+                confirmationStep.style.zIndex = '100'
+            }
+            
+            // Make sure offline viewer is hidden
+            const offlineViewer = document.getElementById('offlineViewer')
+            if (offlineViewer) {
+                offlineViewer.style.display = 'none'
+                offlineViewer.style.visibility = 'hidden'
+                offlineViewer.style.zIndex = '-1'
+            }
+            
             hideMessages()
             
             // Populate confirmation details
@@ -2388,19 +2458,22 @@
             localStorage.setItem('dcSubmissions', JSON.stringify(updatedSubmissions))
         }
 
+        // Global function for onclick handler
+        function handleEditDetails() {
+            console.log('handleEditDetails called')
+            if (currentSubmission) {
+                console.log('Restoring form data:', currentSubmission)
+                restoreFormData(currentSubmission)
+            }
+            console.log('Calling showFormStep')
+            showFormStep()
+            console.log('showFormStep completed')
+        }
+
         // Event Listeners for new UI elements
         document.addEventListener('DOMContentLoaded', function() {
             // Confirmation step buttons - add null checks since they're in hidden elements
-            const editBtn = document.getElementById('editBtn')
-            if (editBtn) {
-                editBtn.addEventListener('click', function() {
-                    // Restore form data from current submission
-                    if (currentSubmission) {
-                        restoreFormData(currentSubmission)
-                    }
-                    showFormStep()
-                })
-            }
+            // Edit button event listener removed - using onclick handler instead
 
             const confirmSubmitBtn = document.getElementById('confirmSubmitBtn')
             if (confirmSubmitBtn) {

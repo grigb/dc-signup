@@ -14,7 +14,10 @@
       "mcp__playwright__browser_tab_close",
       "mcp__playwright__browser_press_key",
       "mcp__playwright__browser_network_requests",
-      "mcp__ide__executeCode"
+      "mcp__ide__executeCode",
+      "mcp__playwright__browser_tab_new",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_handle_dialog"
     ],
     "deny": []
   }

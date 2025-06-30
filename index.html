@@ -450,7 +450,6 @@
         .fixed-bottom {
             padding: 16px 32px 32px;
             background: white;
-            border-top: 1px solid #e2e8f0;
         }
 
         /* Creator Type Modal */
@@ -649,6 +648,28 @@
         }
 
         /* Confirmation Step Styles */
+        .confirmation-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            padding: 16px 32px 12px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .confirmation-header h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .confirmation-header p {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+
         .confirmation-details {
             background: #f8fafc;
             border-radius: 12px;
@@ -954,8 +975,8 @@
                         maxlength="500"
                     ></textarea>
                     <div class="char-count" id="quoteCharCount">0/500 characters</div>
-                    <div style="font-size: 12px; color: #059669; margin-top: 4px; font-style: italic;">
-                        💡 Great testimonials help us showcase our community's impact and attract like-minded creators
+                    <div style="font-size: 12px; color: #059669; margin-top: 16px; margin-bottom: 8px; font-style: italic;">
+                        💡 Your testimonial helps us attract like-minded creators and showcase our community's impact
                     </div>
                 </div>
             </div>
@@ -971,12 +992,14 @@
 
         <!-- Confirmation Step -->
         <div id="confirmationStep" style="display: none; flex-direction: column; height: 100%;">
+            <!-- Fixed Header -->
+            <div class="confirmation-header">
+                <h2>📋 Review Your Submission</h2>
+                <p>Please confirm all details are correct before joining</p>
+            </div>
+            
+            <!-- Scrollable Content -->
             <div class="scrollable-content">
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <h2 style="color: #333; font-size: 24px; margin-bottom: 8px;">📋 Review Your Submission</h2>
-                    <p style="color: #666; font-size: 16px;">Please confirm all details are correct before joining</p>
-                </div>
-                
                 <div id="confirmationDetails" class="confirmation-details">
                     <!-- Details populated by JavaScript -->
                 </div>

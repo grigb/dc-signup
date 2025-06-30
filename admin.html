@@ -311,6 +311,169 @@
         .export-btn:hover {
             background: #047857;
         }
+
+        /* Archive/Delete Functionality */
+        .btn-archive {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-archive:hover {
+            background: #d97706;
+        }
+
+        .btn-unarchive {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-unarchive:hover {
+            background: #059669;
+        }
+
+        .status-archived {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        /* Search functionality */
+        .search-bar {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Confirmation modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: #6b7280;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-confirm {
+            background: #ef4444;
+            color: white;
+            flex: 1;
+        }
+
+        /* Creator Types Editor */
+        .creator-category-editor {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .category-editor-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-editor-content {
+            padding: 16px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .form-row input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-row input[name="label"] {
+            flex: 1;
+        }
+
+        .form-row input[name="description"] {
+            flex: 2;
+        }
+
+        .subcategory-editor {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .subcategory-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .subcategory-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-add-sub {
+            background: #3b82f6;
+            color: white;
+            margin-top: 8px;
+        }
+
+        .btn-remove {
+            background: #ef4444;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -374,11 +537,13 @@
                 <div class="section-header">
                     <h2 class="section-title">Member Management</h2>
                     <div class="filters">
+                        <input type="text" id="searchBar" class="search-bar" placeholder="Search by name or email...">
                         <select id="statusFilter" class="filter-select">
                             <option value="">All Status</option>
                             <option value="verified">Email Verified</option>
                             <option value="pending">Pending Verification</option>
                             <option value="genesis">Genesis Members</option>
+                            <option value="archived">Archived</option>
                         </select>
                         <button id="refreshBtn" class="btn btn-edit">🔄 Refresh</button>
                     </div>
@@ -403,6 +568,35 @@
                     <tbody id="membersTableBody">
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Creator Types Management -->
+            <div class="members-section" style="margin-top: 30px;">
+                <div class="section-header">
+                    <h2 class="section-title">Creator Types Management</h2>
+                    <div class="filters">
+                        <button id="addCategoryBtn" class="btn btn-edit">+ Add Category</button>
+                        <button id="saveCreatorTypesBtn" class="btn btn-verify">💾 Save Changes</button>
+                    </div>
+                </div>
+
+                <div id="creatorTypesContainer" style="padding: 20px;">
+                    <div id="creatorTypesEditor">
+                        <!-- Creator types editor will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle">Confirm Action</h3>
+            <p id="modalMessage">Are you sure you want to perform this action?</p>
+            <div class="modal-buttons">
+                <button id="cancelBtn" class="btn btn-cancel">Cancel</button>
+                <button id="confirmBtn" class="btn btn-confirm">Confirm</button>
             </div>
         </div>
     </div>
@@ -430,10 +624,22 @@
         const statusFilter = document.getElementById('statusFilter')
         const refreshBtn = document.getElementById('refreshBtn')
         const exportBtn = document.getElementById('exportBtn')
+        const searchBar = document.getElementById('searchBar')
+        const confirmModal = document.getElementById('confirmModal')
+        const modalTitle = document.getElementById('modalTitle')
+        const modalMessage = document.getElementById('modalMessage')
+        const cancelBtn = document.getElementById('cancelBtn')
+        const confirmBtn = document.getElementById('confirmBtn')
+        const creatorTypesEditor = document.getElementById('creatorTypesEditor')
+        const addCategoryBtn = document.getElementById('addCategoryBtn')
+        const saveCreatorTypesBtn = document.getElementById('saveCreatorTypesBtn')
         
         // State
         let currentUser = null
         let members = []
+        let filteredMembers = []
+        let pendingAction = null
+        let creatorTypesData = null
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -447,6 +653,18 @@
             refreshBtn.addEventListener('click', loadMembers)
             statusFilter.addEventListener('change', filterMembers)
             exportBtn.addEventListener('click', exportToCSV)
+            searchBar.addEventListener('input', handleSearch)
+            cancelBtn.addEventListener('click', hideConfirmModal)
+            confirmBtn.addEventListener('click', executeAction)
+            addCategoryBtn.addEventListener('click', addNewCategory)
+            saveCreatorTypesBtn.addEventListener('click', saveCreatorTypes)
+            
+            // Close modal when clicking outside
+            confirmModal.addEventListener('click', (e) => {
+                if (e.target === confirmModal) {
+                    hideConfirmModal()
+                }
+            })
         }
         
         async function checkAuthStatus() {
@@ -455,6 +673,7 @@
                 currentUser = session.user
                 showAdminSection()
                 loadMembers()
+                loadCreatorTypes()
             } else {
                 showLoginSection()
             }
@@ -480,6 +699,7 @@
                 currentUser = data.user
                 showAdminSection()
                 loadMembers()
+                loadCreatorTypes()
                 
             } catch (error) {
                 showLoginError('Login failed: ' + error.message)
@@ -572,8 +792,11 @@
                             ${!member.email_verified ? 
                                 `<button class="btn btn-verify" onclick="verifyMember('${member.id}')">Verify</button>` : ''
                             }
-                            <button class="btn btn-edit" onclick="editMember('${member.id}')">Edit</button>
-                            <button class="btn btn-delete" onclick="deleteMember('${member.id}')">Delete</button>
+                            ${member.archived ? 
+                                `<button class="btn btn-unarchive" onclick="unarchiveMember('${member.id}')">Restore</button>` :
+                                `<button class="btn btn-archive" onclick="archiveMember('${member.id}')">Archive</button>`
+                            }
+                            <button class="btn btn-delete" onclick="showDeleteConfirmation('${member.id}', '${escapeHtml(member.name)}')">Delete</button>
                         </div>
                     </td>
                 </tr>
@@ -582,29 +805,50 @@
         
         function getFilteredMembers() {
             const filter = statusFilter.value
+            const searchTerm = searchBar.value.toLowerCase()
             
-            if (!filter) return members
+            let filtered = members
             
-            return members.filter(member => {
-                switch (filter) {
-                    case 'verified':
-                        return member.email_verified === true
-                    case 'pending':
-                        return member.email_verified === false
-                    case 'genesis':
-                        return member.include_in_genesis_group === true
-                    default:
-                        return true
-                }
-            })
+            // Apply status filter
+            if (filter) {
+                filtered = filtered.filter(member => {
+                    switch (filter) {
+                        case 'verified':
+                            return member.email_verified === true && !member.archived
+                        case 'pending':
+                            return member.email_verified === false && !member.archived
+                        case 'genesis':
+                            return member.include_in_genesis_group === true && !member.archived
+                        case 'archived':
+                            return member.archived === true
+                        default:
+                            return true
+                    }
+                })
+            } else {
+                // Show only non-archived by default
+                filtered = filtered.filter(member => !member.archived)
+            }
+            
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(member => 
+                    member.name.toLowerCase().includes(searchTerm) ||
+                    member.email.toLowerCase().includes(searchTerm)
+                )
+            }
+            
+            return filtered
         }
         
         function getStatusClass(member) {
+            if (member.archived) return 'status-archived'
             if (member.email_verified) return 'status-verified'
             return 'status-pending'
         }
         
         function getStatusText(member) {
+            if (member.archived) return 'Archived'
             if (member.email_verified) return 'Verified'
             return 'Pending'
         }
@@ -618,6 +862,69 @@
         
         function filterMembers() {
             renderMembers()
+        }
+        
+        function handleSearch() {
+            renderMembers()
+        }
+        
+        function showConfirmModal(title, message, action) {
+            modalTitle.textContent = title
+            modalMessage.textContent = message
+            pendingAction = action
+            confirmModal.classList.remove('hidden')
+        }
+        
+        function hideConfirmModal() {
+            confirmModal.classList.add('hidden')
+            pendingAction = null
+        }
+        
+        function executeAction() {
+            if (pendingAction) {
+                pendingAction()
+                hideConfirmModal()
+            }
+        }
+        
+        function showDeleteConfirmation(memberId, memberName) {
+            showConfirmModal(
+                'Delete Member',
+                `Are you sure you want to permanently delete "${memberName}"? This action cannot be undone.`,
+                () => deleteMember(memberId)
+            )
+        }
+        
+        async function archiveMember(memberId) {
+            try {
+                const { error } = await supabase
+                    .from('members')
+                    .update({ archived: true, archived_at: new Date().toISOString() })
+                    .eq('id', memberId)
+                
+                if (error) throw error
+                
+                loadMembers()
+                
+            } catch (error) {
+                alert('Failed to archive member: ' + error.message)
+            }
+        }
+        
+        async function unarchiveMember(memberId) {
+            try {
+                const { error } = await supabase
+                    .from('members')
+                    .update({ archived: false, archived_at: null })
+                    .eq('id', memberId)
+                
+                if (error) throw error
+                
+                loadMembers()
+                
+            } catch (error) {
+                alert('Failed to restore member: ' + error.message)
+            }
         }
         
         async function verifyMember(memberId) {
@@ -642,9 +949,6 @@
         }
         
         async function deleteMember(memberId) {
-            const member = members.find(m => m.id === memberId)
-            if (!confirm(`Delete member "${member?.name}" (${member?.email})? This cannot be undone.`)) return
-            
             try {
                 const { error } = await supabase
                     .from('members')
@@ -723,6 +1027,148 @@
             setTimeout(() => {
                 errorMessage.classList.add('hidden')
             }, 5000)
+        }
+
+        // Creator Types Management Functions
+        async function loadCreatorTypes() {
+            try {
+                const response = await fetch('./creator-types.json')
+                creatorTypesData = await response.json()
+                renderCreatorTypesEditor()
+            } catch (error) {
+                console.error('Failed to load creator types:', error)
+                showError('Failed to load creator types configuration')
+            }
+        }
+
+        function renderCreatorTypesEditor() {
+            if (!creatorTypesData) return
+
+            creatorTypesEditor.innerHTML = creatorTypesData.creatorTypes.map((category, categoryIndex) => `
+                <div class="creator-category-editor" data-category-index="${categoryIndex}">
+                    <div class="category-editor-header">
+                        <strong>Category ${categoryIndex + 1}</strong>
+                        <button class="btn btn-remove btn-small" onclick="removeCategory(${categoryIndex})">Remove</button>
+                    </div>
+                    <div class="category-editor-content">
+                        <div class="form-row">
+                            <input type="text" name="label" value="${escapeHtml(category.label)}" placeholder="Category Label" onchange="updateCategory(${categoryIndex}, 'label', this.value)">
+                            <input type="text" name="description" value="${escapeHtml(category.description)}" placeholder="Category Description" onchange="updateCategory(${categoryIndex}, 'description', this.value)">
+                        </div>
+                        
+                        <div class="subcategory-editor">
+                            <strong>Subcategories:</strong>
+                            ${(category.children || []).map((child, childIndex) => `
+                                <div class="subcategory-item">
+                                    <input type="text" value="${escapeHtml(child.label)}" placeholder="Subcategory Label" onchange="updateSubcategory(${categoryIndex}, ${childIndex}, 'label', this.value)" style="flex: 1;">
+                                    <input type="text" value="${escapeHtml(child.description)}" placeholder="Subcategory Description" onchange="updateSubcategory(${categoryIndex}, ${childIndex}, 'description', this.value)" style="flex: 2;">
+                                    <button class="btn btn-remove btn-small" onclick="removeSubcategory(${categoryIndex}, ${childIndex})">×</button>
+                                </div>
+                            `).join('')}
+                            <button class="btn btn-add-sub btn-small" onclick="addSubcategory(${categoryIndex})">+ Add Subcategory</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')
+        }
+
+        function addNewCategory() {
+            if (!creatorTypesData) return
+
+            const newCategory = {
+                id: `custom-category-${Date.now()}`,
+                label: 'New Category',
+                description: 'Description for new category',
+                children: []
+            }
+
+            creatorTypesData.creatorTypes.push(newCategory)
+            renderCreatorTypesEditor()
+        }
+
+        function removeCategory(categoryIndex) {
+            if (!creatorTypesData) return
+
+            const category = creatorTypesData.creatorTypes[categoryIndex]
+            if (confirm(`Remove category "${category.label}" and all its subcategories?`)) {
+                creatorTypesData.creatorTypes.splice(categoryIndex, 1)
+                renderCreatorTypesEditor()
+            }
+        }
+
+        function updateCategory(categoryIndex, field, value) {
+            if (!creatorTypesData) return
+
+            creatorTypesData.creatorTypes[categoryIndex][field] = value
+            
+            // Update ID when label changes
+            if (field === 'label') {
+                creatorTypesData.creatorTypes[categoryIndex].id = value.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')
+            }
+        }
+
+        function addSubcategory(categoryIndex) {
+            if (!creatorTypesData) return
+
+            const newSubcategory = {
+                id: `subcategory-${Date.now()}`,
+                label: 'New Subcategory',
+                description: 'Description for new subcategory'
+            }
+
+            if (!creatorTypesData.creatorTypes[categoryIndex].children) {
+                creatorTypesData.creatorTypes[categoryIndex].children = []
+            }
+
+            creatorTypesData.creatorTypes[categoryIndex].children.push(newSubcategory)
+            renderCreatorTypesEditor()
+        }
+
+        function removeSubcategory(categoryIndex, childIndex) {
+            if (!creatorTypesData) return
+
+            const subcategory = creatorTypesData.creatorTypes[categoryIndex].children[childIndex]
+            if (confirm(`Remove subcategory "${subcategory.label}"?`)) {
+                creatorTypesData.creatorTypes[categoryIndex].children.splice(childIndex, 1)
+                renderCreatorTypesEditor()
+            }
+        }
+
+        function updateSubcategory(categoryIndex, childIndex, field, value) {
+            if (!creatorTypesData) return
+
+            creatorTypesData.creatorTypes[categoryIndex].children[childIndex][field] = value
+            
+            // Update ID when label changes
+            if (field === 'label') {
+                creatorTypesData.creatorTypes[categoryIndex].children[childIndex].id = value.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')
+            }
+        }
+
+        async function saveCreatorTypes() {
+            if (!creatorTypesData) return
+
+            try {
+                // Update metadata
+                creatorTypesData.lastUpdated = new Date().toISOString().split('T')[0]
+
+                // In a real implementation, you'd save to a server
+                // For now, we'll download as JSON for manual upload
+                const jsonString = JSON.stringify(creatorTypesData, null, 2)
+                const blob = new Blob([jsonString], { type: 'application/json' })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = 'creator-types.json'
+                a.click()
+                window.URL.revokeObjectURL(url)
+
+                alert('Creator types configuration downloaded. Please upload the file to replace the current creator-types.json.')
+
+            } catch (error) {
+                console.error('Failed to save creator types:', error)
+                alert('Failed to save creator types: ' + error.message)
+            }
         }
     </script>
 </body>

@@ -4,8 +4,8 @@
   "description": "An offline-first, progressive signup system for the Distributed Creatives network. Works as both a modal component across websites and a standalone conference registration tool.",
   "main": "index.html",
   "scripts": {
-    "dev": "python3 -m http.server 4100",
-    "test": "node test-supabase-setup.js"
+    "dev": "cd src && python3 -m http.server 4100",
+    "test": "node tests/utils/test-supabase-setup.js"
   },
   "repository": {
     "type": "git",

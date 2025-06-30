@@ -1374,6 +1374,7 @@
                 const data = await response.json()
                 creatorTypes = data.creatorTypes
                 console.log('📄 Creator types loaded from local file:', data.version)
+                console.log('Loaded', creatorTypes.length, 'categories from file')
             } catch (error) {
                 console.error('Failed to load creator types from file:', error)
                 // Final fallback to hardcoded list with hierarchy
@@ -1472,14 +1473,14 @@
         }
 
         // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Show test mode indicator if in test mode
             if (testOfflineMode) {
                 document.getElementById('testModeIndicator').style.display = 'block'
             }
             
             updateConnectionStatus()
-            loadCreatorTypes() // Load creator types first
+            await loadCreatorTypes() // Load creator types first and wait for completion
             setupPrivacyControls()
             setupCharacterCounters()
             registerServiceWorker() // Enable offline functionality
@@ -2554,8 +2555,15 @@
             const container = document.getElementById('creatorTypeCategories')
             
             console.log('Loading creator types into modal:', creatorTypes.length, 'categories')
+            console.log('Creator types array:', creatorTypes)
+            
+            if (!container) {
+                console.error('Container element not found!')
+                return
+            }
             
             if (!creatorTypes || creatorTypes.length === 0) {
+                console.error('No creator types loaded!')
                 container.innerHTML = '<p>No creator types available. Please check the database connection.</p>'
                 return
             }

@@ -1047,7 +1047,7 @@
     <div class="container">
         <!-- Fixed Header with Logo -->
         <div class="logo" onclick="goToHomepage()">
-            <img src="./images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
+            <img src="./assets/images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
             <h1>Distributed Creatives</h1>
             <p>Join Our Community</p>
             <div id="testModeIndicator" style="display: none; background: #f59e0b; color: white; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px; font-weight: 600;">🧪 TEST MODE: Offline Simulation</div>
@@ -1219,7 +1219,7 @@
         <div id="offlineViewer" style="display: none;">
             <div class="offline-container">
                 <div class="logo" onclick="goToHomepage()">
-                    <img src="./images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
+                    <img src="./assets/images/distributed-creatives-logo-320px.png" alt="Distributed Creatives Logo">
                     <h2>📱 Offline Submissions</h2>
                     <p>Submissions waiting to sync</p>
                 </div>
@@ -1890,43 +1890,6 @@
             updateSelectedTypes()
             if (bioCharCount) bioCharCount.textContent = '0/300 characters'
             if (quoteCharCount) quoteCharCount.textContent = '0/500 characters'
-        }
-        
-        function restoreFormData(submission) {
-            // Restore basic form fields
-            document.getElementById('name').value = submission.name || ''
-            document.getElementById('email').value = submission.email || ''
-            document.getElementById('country').value = submission.country || ''
-            
-            // Restore creator types
-            selectedCreatorTypes = submission.creator_types.filter(type => !type.startsWith('other:'))
-            const otherTypes = submission.creator_types.filter(type => type.startsWith('other:'))
-            if (otherTypes.length > 0) {
-                otherValue = otherTypes[0].replace('other:', '')
-                document.getElementById('otherText').value = otherValue
-                if (otherInput) otherInput.classList.add('visible')
-            }
-            
-            // Restore bio and quote
-            if (submission.member_bio) {
-                document.getElementById('memberBio').value = submission.member_bio
-                if (bioCharCount) bioCharCount.textContent = `${submission.member_bio.length}/300 characters`
-            }
-            if (submission.member_quote) {
-                document.getElementById('memberQuote').value = submission.member_quote
-                if (quoteCharCount) quoteCharCount.textContent = `${submission.member_quote.length}/500 characters`
-            }
-            
-            // Restore privacy settings
-            document.getElementById('allowNameDisplay').checked = submission.allow_name_display || false
-            document.getElementById('allowCreatorTypeDisplay').checked = submission.allow_creator_type_display || false
-            document.getElementById('allowCommentsDisplay').checked = submission.allow_comments_display || false
-            document.getElementById('includeInGenesisGroup').checked = submission.include_in_genesis_group || false
-            
-            // Update UI elements
-            renderCreatorTypes()
-            updateSelectedTypes()
-            updatePrivacyControls()
         }
 
         // Database operations
@@ -2786,6 +2749,25 @@
                 selectedCreatorTypes.push('other')
                 updateOtherCheckboxState(true)
             }
+        }
+        
+        // DEVELOPMENT AUTO-RELOAD - REMOVE BEFORE DEPLOYMENT
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            let lastModified = null;
+            setInterval(async () => {
+                try {
+                    const response = await fetch(location.href, { method: 'HEAD' });
+                    const modified = response.headers.get('last-modified');
+                    if (lastModified && lastModified !== modified) {
+                        console.log('Page changed, reloading...');
+                        location.reload();
+                    }
+                    lastModified = modified;
+                } catch (e) {
+                    // Ignore errors
+                }
+            }, 2000); // Check every 2 seconds
+            console.log('Auto-reload enabled (dev mode)');
         }
     </script>
 </body>

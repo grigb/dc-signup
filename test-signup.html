@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Signup</title>
+</head>
+<body>
+    <h1>Testing Email Verification</h1>
+    <p>To complete the email verification setup:</p>
+    
+    <ol>
+        <li>Run this SQL in Supabase SQL Editor:
+            <pre style="background: #f0f0f0; padding: 10px;">
+-- Create trigger to automatically send verification email when new member is created
+CREATE OR REPLACE FUNCTION trigger_send_verification_email()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only send email if member has a verification token and email is not verified
+  IF NEW.verification_token IS NOT NULL AND NEW.email_verified = false THEN
+    -- Call the send_verification_email function
+    PERFORM send_verification_email(NEW.email, NEW.name, NEW.verification_token);
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS on_member_created ON members;
+
+-- Create the trigger
+CREATE TRIGGER on_member_created
+  AFTER INSERT ON members
+  FOR EACH ROW
+  EXECUTE FUNCTION trigger_send_verification_email();
+            </pre>
+        </li>
+        
+        <li>Make sure you've verified your test email in AWS SES:
+            <ul>
+                <li>Go to AWS SES Console</li>
+                <li>Verified identities → Create identity → Email address</li>
+                <li>Enter your email and verify it</li>
+            </ul>
+        </li>
+        
+        <li>Clear your browser cache and try signing up again at:
+            <a href="https://signup.distributedcreatives.org">https://signup.distributedcreatives.org</a>
+        </li>
+    </ol>
+    
+    <h2>Current Status:</h2>
+    <ul>
+        <li>✅ AWS SES domain verified (mail.distributedcreatives.org)</li>
+        <li>✅ Edge Function deployed to Supabase</li>
+        <li>✅ Frontend code fixed (no more sendVerificationEmail error)</li>
+        <li>✅ Custom domain active (signup.distributedcreatives.org)</li>
+        <li>⏳ Database trigger needs to be created (run SQL above)</li>
+        <li>⏳ Test email needs to be verified in AWS SES</li>
+    </ul>
+</body>
+</html>

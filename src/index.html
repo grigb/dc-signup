@@ -1276,12 +1276,12 @@
 
     <script>
         // Configuration - Use environment variables in production
-        // SECURITY: Previous JWT key was exposed and invalidated
-        const SUPABASE_URL = window.SUPABASE_URL || 'https://jgnyutkpxapaghderjmj.supabase.co'
-        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'REPLACE_WITH_NEW_SECURE_KEY'
+        // Environment variables - replaced by Cloudflare Pages build process
+        const SUPABASE_URL = '__SUPABASE_URL__'
+        const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__'
         
         // Check if API keys are properly configured
-        const hasValidApiKey = SUPABASE_ANON_KEY !== 'REPLACE_WITH_NEW_SECURE_KEY' && SUPABASE_ANON_KEY.length > 50
+        const hasValidApiKey = SUPABASE_ANON_KEY !== '__SUPABASE_' + 'ANON_KEY__' && SUPABASE_ANON_KEY.startsWith('eyJ')
         
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -2455,7 +2455,7 @@
         function deleteOfflineSubmissionSilent(submissionId) {
             const submissions = getLocalSubmissions()
             const updatedSubmissions = submissions.filter(sub => sub.id !== submissionId)
-            localStorage.setItem('dcSubmissions', JSON.stringify(updatedSubmissions))
+            localStorage.setItem('dcSignups', JSON.stringify(updatedSubmissions))
         }
 
         // Global function for onclick handler

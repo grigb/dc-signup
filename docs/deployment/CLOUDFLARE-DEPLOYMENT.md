@@ -44,8 +44,8 @@ Build output directory: /
 ### **4. Set Environment Variables**
 Add these in Pages settings:
 ```
-SUPABASE_URL=https://jgnyutkpxapaghderjmj.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_URL=https://URL_HERE.supabase.co
+SUPABASE_ANON_KEY=KEY_HERE...
 ```
 
 ### **5. Custom Domain Setup**

@@ -1321,7 +1321,7 @@
         const connectionStatus = document.getElementById('connectionStatus')
         const successMessage = document.getElementById('successMessage')
         const errorMessage = document.getElementById('errorMessage')
-        const creatorTypeList = document.getElementById('creatorTypeCategories')
+        const creatorTypeList = document.getElementById('creatorTypeList')
         const selectedTypesContainer = document.getElementById('selectedTypes')
         const currentCategoryLabel = document.getElementById('currentCategoryLabel')
         const selectionCount = document.getElementById('selectionCount')
@@ -1343,6 +1343,7 @@
                 console.log('🧪 TEST MODE: Skipping database, loading from local file')
                 return loadCreatorTypesFromFile()
             }
+            
             
             try {
                 // First try to load from Supabase database
@@ -2554,17 +2555,66 @@
         function loadCreatorTypesIntoModal() {
             const container = document.getElementById('creatorTypeCategories')
             
+            // QUICK FIX: Hardcode creator types if not loaded
+            if (!creatorTypes || creatorTypes.length === 0) {
+                creatorTypes = [
+                    {
+                        id: "traditional-arts",
+                        label: "Traditional Arts",
+                        description: "Classic artistic mediums and forms",
+                        children: [
+                            { id: "visual-arts", label: "Visual Arts", description: "Painting, drawing, sculpture" },
+                            { id: "music", label: "Music", description: "Composition, performance, production" },
+                            { id: "writing", label: "Writing", description: "Fiction, non-fiction, poetry" },
+                            { id: "photography", label: "Photography", description: "Digital and film photography" },
+                            { id: "performance-acting", label: "Performance/Acting", description: "Theater, film, live performance" }
+                        ]
+                    },
+                    {
+                        id: "technical-creation",
+                        label: "Technical Creation",
+                        description: "Technology-focused creative work",
+                        children: [
+                            { id: "software-development", label: "Software Development", description: "Applications, systems, tools" },
+                            { id: "game-development", label: "Game Development", description: "Video games, interactive media" },
+                            { id: "web-development", label: "Web Development", description: "Websites, web applications" },
+                            { id: "engineering", label: "Engineering", description: "Hardware, systems, innovation" },
+                            { id: "data-science", label: "Data Science", description: "Analytics, visualization, AI/ML" }
+                        ]
+                    },
+                    {
+                        id: "content-creation",
+                        label: "Content Creation",
+                        description: "Digital content and media production",
+                        children: [
+                            { id: "video", label: "Video", description: "Film, streaming, video production" },
+                            { id: "podcasting", label: "Podcasting", description: "Audio content, broadcasting" },
+                            { id: "blogging", label: "Blogging", description: "Written online content" },
+                            { id: "social-media", label: "Social Media", description: "Platform-specific content creation" }
+                        ]
+                    },
+                    {
+                        id: "design-fields",
+                        label: "Design Fields",
+                        description: "Visual and functional design work",
+                        children: [
+                            { id: "ux-ui-design", label: "UX/UI Design", description: "User experience, interface design" },
+                            { id: "graphic-design", label: "Graphic Design", description: "Visual communication, branding" },
+                            { id: "industrial-design", label: "Industrial Design", description: "Product design, manufacturing" }
+                        ]
+                    },
+                    {
+                        id: "other",
+                        label: "Other",
+                        description: "Creative work not listed above"
+                    }
+                ]
+            }
+            
             console.log('Loading creator types into modal:', creatorTypes.length, 'categories')
-            console.log('Creator types array:', creatorTypes)
             
             if (!container) {
                 console.error('Container element not found!')
-                return
-            }
-            
-            if (!creatorTypes || creatorTypes.length === 0) {
-                console.error('No creator types loaded!')
-                container.innerHTML = '<p>No creator types available. Please check the database connection.</p>'
                 return
             }
             

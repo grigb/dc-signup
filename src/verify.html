@@ -123,7 +123,7 @@
             <div class="success">✓</div>
             <h1>Email Verified!</h1>
             <p class="message">
-                Thank you for verifying your email. You're now officially a Genesis Member of Distributed Creatives!
+                Thank you for verifying your email. You're now officially a member of Distributed Creatives!
             </p>
             <a href="/" class="button">Return to Homepage</a>
         </div>
@@ -175,8 +175,12 @@
                     return
                 }
 
-                if (data === true) {
+                if (data && data.success === true) {
                     showSuccess()
+                    // Redirect to member page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = `/member.html?email=${encodeURIComponent(data.email)}&verified=true`
+                    }, 2000)
                 } else {
                     showError('Invalid or expired verification link')
                 }

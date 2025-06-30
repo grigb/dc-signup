@@ -2463,11 +2463,23 @@
             console.log('handleEditDetails called')
             if (currentSubmission) {
                 console.log('Restoring form data:', currentSubmission)
-                restoreFormData(currentSubmission)
+                try {
+                    restoreFormData(currentSubmission)
+                    console.log('restoreFormData completed successfully')
+                } catch (error) {
+                    console.error('❌ ERROR in restoreFormData:', error)
+                    console.error('Error stack:', error.stack)
+                    console.log('currentSubmission data:', currentSubmission)
+                }
             }
             console.log('Calling showFormStep')
-            showFormStep()
-            console.log('showFormStep completed')
+            try {
+                showFormStep()
+                console.log('showFormStep completed successfully')
+            } catch (error) {
+                console.error('❌ ERROR in showFormStep:', error)
+                console.error('Error stack:', error.stack)
+            }
         }
 
         // Event Listeners for new UI elements

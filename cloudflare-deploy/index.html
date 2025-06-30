@@ -1907,22 +1907,8 @@
             }
             
             try {
-                // Generate verification token
-                const { data: tokenData, error: tokenError } = await supabase
-                    .rpc('generate_verification_token')
-                
-                if (tokenError) {
-                    // Handle specific API key errors gracefully
-                    if (tokenError.message && tokenError.message.includes('Invalid API key')) {
-                        console.warn('🔑 API key configuration issue. Running in offline mode.')
-                        console.warn('💡 To fix: Set proper SUPABASE_ANON_KEY or create config.js')
-                        return false
-                    }
-                    console.error('Token generation error:', tokenError)
-                    return false
-                }
-                
-                const verificationToken = tokenData
+                // Skip email verification for now - no email service configured
+                const verificationToken = null
                 
                 const { data, error } = await supabase
                     .from('members')

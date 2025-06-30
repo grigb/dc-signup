@@ -1858,13 +1858,8 @@
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
                     
-                    // Send verification email
-                    const emailSent = await sendVerificationEmail(submission.email, submission.name)
-                    if (emailSent) {
-                        showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
-                    } else {
-                        showSuccess('Registration saved! Email verification will be sent shortly.')
-                    }
+                    // Email verification is handled automatically by the database
+                    showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
                 } else {
                     showSuccess('Saved locally. Will sync when connection improves.')
                 }
@@ -1907,8 +1902,8 @@
             }
             
             try {
-                // Skip email verification for now - no email service configured
-                const verificationToken = null
+                // Generate verification token - the database function will handle sending the email
+                const verificationToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
                 
                 const { data, error } = await supabase
                     .from('members')

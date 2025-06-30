@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Submit Button</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h2>Debug Submit Button Issue</h2>
+    <button onclick="testSubmitButton()">Test Submit Function</button>
+    <div id="results" style="margin-top: 20px; font-family: monospace;"></div>
+
+    <script>
+        function testSubmitButton() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing Submit Button:</h3>';
+            
+            // Test 1: Check if form exists
+            const form = document.getElementById('signupForm');
+            results.innerHTML += `<p>1. Form element found: ${!!form}</p>`;
+            
+            // Test 2: Check if handleFormSubmit function exists
+            results.innerHTML += `<p>2. handleFormSubmit function exists: ${typeof window.handleFormSubmit === 'function'}</p>`;
+            
+            // Test 3: Try to call the function
+            try {
+                if (typeof window.handleFormSubmit === 'function') {
+                    window.handleFormSubmit();
+                    results.innerHTML += `<p>3. Function call successful</p>`;
+                } else {
+                    results.innerHTML += `<p>3. Cannot call function - does not exist</p>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<p>3. Error calling function: ${error.message}</p>`;
+            }
+            
+            // Test 4: Check form submit event listeners
+            if (form) {
+                results.innerHTML += `<p>4. Form has submit listeners: checking...</p>`;
+                // Try to trigger submit event
+                try {
+                    const submitEvent = new Event('submit', {
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    form.dispatchEvent(submitEvent);
+                    results.innerHTML += `<p>4. Submit event dispatched successfully</p>`;
+                } catch (error) {
+                    results.innerHTML += `<p>4. Error dispatching submit event: ${error.message}</p>`;
+                }
+            }
+        }
+        
+        // Load the main index.html in an iframe to test the actual functionality
+        function loadMainPage() {
+            const iframe = document.createElement('iframe');
+            iframe.src = './index.html';
+            iframe.style.width = '100%';
+            iframe.style.height = '500px';
+            iframe.style.border = '1px solid #ccc';
+            document.body.appendChild(iframe);
+        }
+        
+        // Load the main page for testing
+        window.onload = () => {
+            loadMainPage();
+        };
+    </script>
+</body>
+</html>

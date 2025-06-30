@@ -1,0 +1,14 @@
+# Cloudflare Pages Redirects for DC Genesis Signup
+
+# Redirect common paths to main form
+/signup /
+/register /
+/join /
+/genesis /
+
+# Admin tool routes - must come before catch-all
+/admin /admin.html 200
+/admin/ /admin.html 200
+
+# Catch-all for main form (must be last)
+/* /index.html 200

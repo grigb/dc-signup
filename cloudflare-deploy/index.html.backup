@@ -1,0 +1,2859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Genesis Members - Distributed Creatives</title>
+    <meta name="description" content="Join the founding members of Distributed Creatives - the creator-owned network advocating for artist rights and community building.">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="DC Genesis">
+    
+    <!-- SEO Meta Tags -->
+    <meta property="og:title" content="Join Genesis Members - Distributed Creatives">
+    <meta property="og:description" content="Join the founding members of the creator-owned network advocating for artist rights.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://signup.distributedcreatives.org">
+    
+    <!-- Security -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://jgnyutkpxapaghderjmj.supabase.co https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';">
+    
+    <!-- Preconnect to improve performance -->
+    <link rel="preconnect" href="https://jgnyutkpxapaghderjmj.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            height: calc(100vh - 40px);
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+            margin: 0 auto;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 20px 32px 0;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        .logo img {
+            width: 120px;
+            height: auto;
+            margin-bottom: 8px;
+        }
+
+        .logo h1 {
+            background: linear-gradient(45deg, #22c55e, #8b5cf6, #06b6d4, #f97316, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            margin-top: 0;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .connection-status {
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-align: center;
+            margin: 0 32px 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .online {
+            background: #10b981;
+            color: white;
+        }
+
+        .offline {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Hierarchical Creator Type Selector */
+        .creator-type-selector {
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: #fafafa;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .creator-type-header {
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e1e5e9;
+            font-weight: 600;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .creator-type-nav {
+            padding: 8px 16px;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e1e5e9;
+            display: none;
+        }
+
+        .creator-type-nav.visible {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-back {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .nav-back:hover {
+            background: #e2e8f0;
+        }
+
+        .nav-path {
+            margin-left: 12px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .creator-type-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .creator-type-option {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s ease;
+        }
+
+        .creator-type-option:hover {
+            background: #f8fafc;
+        }
+
+        .creator-type-option:last-child {
+            border-bottom: none;
+        }
+
+        .creator-type-option.selected {
+            background: #f0f9ff;
+            border-left: 4px solid #667eea;
+        }
+
+        .option-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .option-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            color: #64748b;
+        }
+
+        .check-icon {
+            color: #10b981;
+        }
+
+        .chevron-icon {
+            color: #94a3b8;
+        }
+
+        .other-input {
+            padding: 12px 16px;
+            border-top: 1px solid #e1e5e9;
+            background: #fafafa;
+            display: none;
+        }
+
+        .other-input.visible {
+            display: block;
+        }
+
+        .other-input input {
+            padding: 8px 12px;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .selected-types {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .selected-type-tag {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 4px 8px;
+            border-radius: 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .remove-type {
+            margin-left: 6px;
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        /* Privacy Controls */
+        .privacy-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .privacy-section h3 {
+            color: #374151;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .privacy-option {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .privacy-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .privacy-option input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            margin-top: 2px;
+        }
+
+        .privacy-option label {
+            margin: 0;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        .privacy-description {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Member showcase section */
+        .member-showcase {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            display: block; /* Always visible for now */
+        }
+
+        .member-showcase.visible {
+            display: block;
+        }
+
+        .member-showcase h4 {
+            color: #065f46;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .member-showcase textarea {
+            background: white;
+            border-color: #bbf7d0;
+            font-size: 14px;
+            min-height: 60px;
+        }
+
+        .member-showcase .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #059669;
+            margin-top: 4px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 24px;
+        }
+
+        .submit-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 0 32px 16px;
+            display: none;
+        }
+
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 0 32px 16px;
+            display: none;
+        }
+
+        /* Scrollable Content Area */
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 32px;
+        }
+
+        /* Fixed Bottom Button */
+        .fixed-bottom {
+            padding: 16px 32px 32px;
+            background: white;
+        }
+
+        /* Creator Type Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            height: 80vh;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+        }
+
+        .modal-fixed-bottom {
+            padding: 16px 24px 24px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        .creator-type-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .creator-category {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .category-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .category-header:hover {
+            background: #f1f5f9;
+        }
+
+        .category-header.selected {
+            background: #e0e7ff;
+            border-bottom-color: #667eea;
+        }
+
+        .category-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .category-description {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .category-check {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .category-check.selected {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .subcategories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            padding: 16px;
+            background: #fafbfc;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .subcategory-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .subcategory-card:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .subcategory-card.selected {
+            border-color: #667eea;
+            background: #f0f9ff;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
+        }
+
+        .subcategory-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .subcategory-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+            padding-right: 20px;
+        }
+
+        .subcategory-description {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.3;
+        }
+
+
+        .simple-creator-input {
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 12px;
+            background: #fafafa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .simple-creator-input:hover {
+            border-color: #667eea;
+            background: white;
+        }
+
+        /* Confirmation Step Styles */
+        #confirmationStep {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            height: 100vh;
+            width: 100vw;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #confirmationStep .confirmation-container {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            height: calc(100vh - 40px);
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .confirmation-header {
+            flex-shrink: 0;
+            background: white;
+            z-index: 10;
+            padding: 16px 32px 12px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .confirmation-header h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .confirmation-header p {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        #confirmationStep .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 32px;
+            min-height: 0;
+            /* Ensure scrollable area takes available space */
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #confirmationStep .fixed-bottom {
+            flex-shrink: 0;
+            padding: 16px 32px 32px;
+            background: white;
+            border-top: 1px solid #f1f5f9;
+            position: relative;
+            z-index: 10;
+        }
+
+        .confirmation-details {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .confirmation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .confirmation-item:last-child {
+            border-bottom: none;
+        }
+
+        .confirmation-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 120px;
+            margin-right: 16px;
+        }
+
+        .confirmation-value {
+            color: #1f2937;
+            flex: 1;
+            text-align: right;
+        }
+
+        .creator-types-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .creator-type-chip {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Mobile/iPad specific styles for confirmation step */
+        @media screen and (max-width: 768px) {
+            #confirmationStep {
+                padding: 10px;
+            }
+            
+            #confirmationStep .confirmation-container {
+                height: calc(100vh - 20px);
+                max-height: calc(100vh - 20px);
+            }
+            
+            #confirmationStep .confirmation-header {
+                padding: 12px 20px 8px;
+            }
+            
+            #confirmationStep .scrollable-content {
+                padding: 12px 20px;
+            }
+            
+            #confirmationStep .fixed-bottom {
+                padding: 12px 20px 20px;
+            }
+        }
+
+        /* Ensure confirmation step works on short screens */
+        @media screen and (max-height: 600px) {
+            #confirmationStep {
+                padding: 5px;
+            }
+            
+            #confirmationStep .confirmation-container {
+                height: calc(100vh - 10px);
+                max-height: calc(100vh - 10px);
+            }
+            
+            #confirmationStep .confirmation-header {
+                padding: 8px 20px 6px;
+            }
+            
+            #confirmationStep .fixed-bottom {
+                padding: 8px 20px 16px;
+            }
+        }
+
+        /* Offline Viewer Styles - Same pattern as confirmation step */
+        #offlineViewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            height: 100vh;
+            width: 100vw;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #offlineViewer .offline-container {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            height: calc(100vh - 40px);
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #offlineViewer .logo {
+            flex-shrink: 0;
+            background: white;
+            text-align: center;
+            padding: 16px 32px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 0;
+        }
+
+        #offlineViewer .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 32px;
+            min-height: 0;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #offlineViewer .fixed-bottom {
+            flex-shrink: 0;
+            padding: 16px 32px 32px;
+            background: white;
+            border-top: 1px solid #f1f5f9;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Mobile/iPad specific styles for offline viewer */
+        @media screen and (max-width: 768px) {
+            #offlineViewer {
+                padding: 10px;
+            }
+            
+            #offlineViewer .offline-container {
+                height: calc(100vh - 20px);
+                max-height: calc(100vh - 20px);
+            }
+            
+            #offlineViewer .logo {
+                padding: 12px 20px 8px;
+            }
+            
+            #offlineViewer .scrollable-content {
+                padding: 12px 20px;
+            }
+            
+            #offlineViewer .fixed-bottom {
+                padding: 12px 20px 20px;
+            }
+        }
+
+        /* Ensure offline viewer works on short screens */
+        @media screen and (max-height: 600px) {
+            #offlineViewer {
+                padding: 5px;
+            }
+            
+            #offlineViewer .offline-container {
+                height: calc(100vh - 10px);
+                max-height: calc(100vh - 10px);
+            }
+            
+            #offlineViewer .logo {
+                padding: 8px 20px 6px;
+            }
+            
+            #offlineViewer .fixed-bottom {
+                padding: 8px 20px 16px;
+            }
+        }
+
+        /* Offline Submissions Styles */
+        .offline-submission {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .offline-submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .offline-submission-name {
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        .offline-submission-time {
+            font-size: 12px;
+            color: #78350f;
+        }
+
+        .offline-submission-details {
+            font-size: 14px;
+            color: #92400e;
+        }
+
+        .no-offline-submissions {
+            text-align: center;
+            color: #64748b;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            text-align: center;
+            margin: 0 32px 16px;
+        }
+
+        .view-toggle button {
+            background: none;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 8px 16px;
+            margin: 0 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .view-toggle button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Browser-specific fixes for Brave/Chrome variations */
+        @supports (display: grid) {
+            body {
+                display: grid;
+                place-items: center;
+                grid-template-rows: 1fr;
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Fallback for older browsers */
+        @supports not (display: grid) {
+            body {
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -webkit-flex-direction: column;
+                -ms-flex-direction: column;
+                flex-direction: column;
+                -webkit-box-align: center;
+                -webkit-align-items: center;
+                -ms-flex-align: center;
+                align-items: center;
+                -webkit-box-pack: center;
+                -webkit-justify-content: center;
+                -ms-flex-pack: center;
+                justify-content: center;
+            }
+        }
+
+        /* Alternative centering method for problematic Brave versions */
+        .container-wrapper {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 500px;
+            height: calc(100vh - 40px);
+            z-index: 1;
+        }
+
+        /* Use this class if flexbox centering fails */
+        .use-fixed-centering .container {
+            position: static;
+            height: 100%;
+            margin: 0;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                padding: 24px;
+                max-width: none;
+            }
+            
+            .container-wrapper {
+                width: calc(100% - 20px);
+                height: calc(100vh - 20px);
+                top: 50%;
+                left: 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Fixed Header with Logo -->
+        <div class="logo" onclick="goToHomepage()">
+            <img src="./assets/images/distributed-creatives-logo-320px.png?v=2" alt="Distributed Creatives Logo">
+            <h1>Distributed Creatives</h1>
+            <p>Join Our Community</p>
+            <div id="testModeIndicator" style="display: none; background: #f59e0b; color: white; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px; font-weight: 600;">🧪 TEST MODE: Offline Simulation</div>
+        </div>
+
+        <div class="connection-status" id="connectionStatus">
+            🟡 Checking connection...
+        </div>
+        
+        <div id="syncStatus" style="display: none; background: #3b82f6; color: white; padding: 8px; border-radius: 4px; margin-bottom: 16px; text-align: center; font-size: 12px; font-weight: 600;"></div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle" id="viewToggle" style="display: none;">
+            <button id="formViewBtn" class="active">New Signup</button>
+            <button id="offlineViewBtn">View Offline (<span id="offlineCount">0</span>)</button>
+        </div>
+
+        <div class="success" id="successMessage"></div>
+        <div class="error" id="errorMessage"></div>
+
+        <!-- Scrollable Content Area -->
+        <div class="scrollable-content">
+            <form id="signupForm">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Creator Type (select all that apply) *</label>
+                <div class="simple-creator-input" onclick="openCreatorTypeModal()">
+                    <span id="creatorTypeDisplay">Click to select your creator types</span>
+                    <span id="selectionCount">0 selected</span>
+                </div>
+                
+                <div class="selected-types" id="selectedTypes">
+                    <!-- Selected types populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="country">Country</label>
+                <select id="country" name="country">
+                    <option value="">Select your country</option>
+                    <option value="United States">United States</option>
+                    <option value="Canada">Canada</option>
+                    <option value="United Kingdom">United Kingdom</option>
+                    <option value="Australia">Australia</option>
+                    <option value="Germany">Germany</option>
+                    <option value="France">France</option>
+                    <option value="Japan">Japan</option>
+                    <option value="Brazil">Brazil</option>
+                    <option value="India">India</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <!-- Privacy Controls -->
+            <div class="privacy-section">
+                <h3>🔒 Website Display Preferences</h3>
+                
+                <div class="privacy-option">
+                    <input type="checkbox" id="allowNameDisplay" name="allowNameDisplay">
+                    <label for="allowNameDisplay">
+                        Display my name on the website
+                        <div class="privacy-description">We can show "John Smith" in member lists</div>
+                    </label>
+                </div>
+                
+                <div class="privacy-option">
+                    <input type="checkbox" id="allowCreatorTypeDisplay" name="allowCreatorTypeDisplay">
+                    <label for="allowCreatorTypeDisplay">
+                        Display my creator type(s) on the website
+                        <div class="privacy-description">We can show "Digital Artist" or your selected creator types</div>
+                    </label>
+                </div>
+                
+                <div class="privacy-option">
+                    <input type="checkbox" id="allowCommentsDisplay" name="allowCommentsDisplay">
+                    <label for="allowCommentsDisplay">
+                        Display my comments/bio on the website
+                        <div class="privacy-description">We can publish your testimonial or bio if provided</div>
+                    </label>
+                </div>
+                
+                <div class="privacy-option">
+                    <input type="checkbox" id="includeInGenesisGroup" name="includeInGenesisGroup">
+                    <label for="includeInGenesisGroup">
+                        Include me in the "Genesis Members" showcase
+                        <div class="privacy-description">Feature me as a founding community member</div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Member Showcase Section -->
+            <div class="member-showcase" id="memberShowcase">
+                <h4>✨ Tell us about yourself (optional)</h4>
+                
+                <div class="form-group">
+                    <label for="memberBio">About You</label>
+                    <textarea 
+                        id="memberBio" 
+                        name="memberBio" 
+                        placeholder="Share something about your creative work, background, or what you're working on."
+                        maxlength="300"
+                    ></textarea>
+                    <div class="char-count" id="bioCharCount">0/300 characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="memberQuote">Testimonial or Quote About DC</label>
+                    <textarea 
+                        id="memberQuote" 
+                        name="memberQuote" 
+                        placeholder="Share why you're excited about Distributed Creatives, why you joined, or your thoughts on creator rights."
+                        maxlength="500"
+                    ></textarea>
+                    <div class="char-count" id="quoteCharCount">0/500 characters</div>
+                    <div style="font-size: 12px; color: #059669; margin-top: 16px; margin-bottom: 8px; font-style: italic;">
+                        💡 Your testimonial helps us attract like-minded creators and showcase our community's impact
+                    </div>
+                </div>
+            </div>
+            </form>
+        </div>
+
+        <!-- Fixed Bottom Button Area -->
+        <div class="fixed-bottom">
+            <button type="button" class="submit-btn" id="submitBtn" onclick="handleFormSubmit()">
+                Review Submission
+            </button>
+        </div>
+
+        <!-- Confirmation Step -->
+        <div id="confirmationStep" style="display: none;">
+            <div class="confirmation-container">
+                <!-- Fixed Header -->
+                <div class="confirmation-header">
+                    <h2>📋 Review Your Submission</h2>
+                    <p>Please confirm all details are correct before joining</p>
+                </div>
+                
+                <!-- Scrollable Content -->
+                <div class="scrollable-content">
+                    <div id="confirmationDetails" class="confirmation-details">
+                        <!-- Details populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="fixed-bottom">
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;" onclick="handleEditDetails()">
+                            ← Edit Details
+                        </button>
+                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;">
+                            Join the Community
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Offline Submissions Viewer -->
+        <div id="offlineViewer" style="display: none;">
+            <div class="offline-container">
+                <div class="logo" onclick="goToHomepage()">
+                    <img src="./assets/images/distributed-creatives-logo-320px.png?v=2" alt="Distributed Creatives Logo">
+                    <h2>📱 Offline Submissions</h2>
+                    <p>Submissions waiting to sync</p>
+                </div>
+
+                <div class="scrollable-content">
+                    <div id="offlineSubmissionsList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="fixed-bottom">
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" class="submit-btn" id="backToFormBtn" style="background: #64748b; flex: 1;">
+                            ← Back to Form
+                        </button>
+                        <button type="button" class="submit-btn" id="syncNowBtn" style="flex: 1;">
+                            Sync Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Creator Type Modal -->
+    <div id="creatorTypeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <!-- Fixed Header -->
+            <div class="modal-header">
+                <h3 class="modal-title">Select Your Creator Types</h3>
+                <button class="modal-close" onclick="closeCreatorTypeModal()">&times;</button>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="modal-scrollable-content">
+                <div class="creator-type-categories" id="creatorTypeCategories">
+                    <!-- Creator type categories populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Fixed Bottom Buttons -->
+            <div class="modal-fixed-bottom">
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="submit-btn" onclick="closeCreatorTypeModal()" style="background: #64748b; flex: 1;">
+                        Cancel
+                    </button>
+                    <button type="button" class="submit-btn" onclick="saveCreatorTypes()" style="flex: 2;">
+                        Save Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Use environment variables in production
+        // Environment variables - replaced by Cloudflare Pages build process
+        const SUPABASE_URL = 'https://jgnyutkpxapaghderjmj.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU5NDEsImV4cCI6MjA2Njc5MTk0MX0.kIHBUGVwkWN1zxkzHXYk8gpofr5sYmiQrOGkxpaqu2I'
+        
+        // Check if API keys are properly configured
+        const hasValidApiKey = SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU5NDEsImV4cCI6MjA2Njc5MTk0MX0.kIHBUGVwkWN1zxkzHXYk8gpofr5sYmiQrOGkxpaqu2I' && SUPABASE_ANON_KEY.startsWith('eyJ')
+        
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        
+        // Log configuration status and provide guidance
+        if (!hasValidApiKey) {
+            console.warn('⚠️ API configuration incomplete. Running in offline-only mode.')
+            console.warn('💡 To enable online sync:')
+            console.warn('   1. Copy config.template.js to config.js')
+            console.warn('   2. Add your Supabase API keys to config.js')
+            console.warn('   3. OR set window.SUPABASE_ANON_KEY before loading this script')
+            console.warn('📝 All form submissions will be saved locally and can sync later')
+        } else {
+            console.log('✅ API configuration detected. Online sync enabled.')
+        }
+        
+        // Creator Types - loaded from external JSON file
+        let creatorTypes = []
+        
+        // State management
+        let isOnline = navigator.onLine
+        let selectedCreatorTypes = []
+        let currentLevel = []
+        let navigationPath = []
+        let otherValue = ""
+        
+        // Test mode - simulate offline behavior
+        const urlParams = new URLSearchParams(window.location.search)
+        const testOfflineMode = urlParams.get('offline') === 'true'
+        if (testOfflineMode) {
+            isOnline = false
+            console.log('🧪 TEST MODE: Simulating offline behavior')
+        }
+        
+        // DOM elements
+        const form = document.getElementById('signupForm')
+        const connectionStatus = document.getElementById('connectionStatus')
+        const successMessage = document.getElementById('successMessage')
+        const errorMessage = document.getElementById('errorMessage')
+        const creatorTypeList = document.getElementById('creatorTypeList')
+        const selectedTypesContainer = document.getElementById('selectedTypes')
+        const currentCategoryLabel = document.getElementById('currentCategoryLabel')
+        const selectionCount = document.getElementById('selectionCount')
+        const creatorTypeNav = document.getElementById('creatorTypeNav')
+        const navBack = document.getElementById('navBack')
+        const navPath = document.getElementById('navPath')
+        const otherInput = document.getElementById('otherInput')
+        const otherText = document.getElementById('otherText')
+        const memberShowcase = document.getElementById('memberShowcase')
+        const memberBio = document.getElementById('memberBio')
+        const memberQuote = document.getElementById('memberQuote')
+        const bioCharCount = document.getElementById('bioCharCount')
+        const quoteCharCount = document.getElementById('quoteCharCount')
+
+        // Load creator types from database with JSON fallback
+        async function loadCreatorTypes() {
+            // In test offline mode, skip database and use local file
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Skipping database, loading from local file')
+                return loadCreatorTypesFromFile()
+            }
+            
+            try {
+                // First try to load from Supabase database
+                const { data, error } = await supabase.rpc('get_creator_types_json')
+                
+                if (error) {
+                    console.error('Database error loading creator types:', error)
+                    return loadCreatorTypesFromFile()
+                }
+                
+                if (data && data.creatorTypes) {
+                    creatorTypes = data.creatorTypes
+                    console.log('✅ Creator types loaded from database:', data.version)
+                    console.log('Found', creatorTypes.length, 'creator type categories')
+                } else {
+                    console.warn('No creator types data received, falling back to file')
+                    return loadCreatorTypesFromFile()
+                }
+            } catch (error) {
+                console.error('Failed to load creator types from database:', error)
+                return loadCreatorTypesFromFile()
+            }
+        }
+
+        // Fallback: Load creator types from local JSON file
+        async function loadCreatorTypesFromFile() {
+            try {
+                const response = await fetch('./creator-types.json')
+                const data = await response.json()
+                creatorTypes = data.creatorTypes
+                console.log('📄 Creator types loaded from local file:', data.version)
+            } catch (error) {
+                console.error('Failed to load creator types from file:', error)
+                // Final fallback to hardcoded list with hierarchy
+                creatorTypes = [
+                    {
+                        id: 'traditional-arts',
+                        label: 'Traditional Arts',
+                        description: 'Classic artistic mediums and forms',
+                        children: [
+                            { id: 'visual-arts', label: 'Visual Arts', description: 'Painting, drawing, sculpture' },
+                            { id: 'music', label: 'Music', description: 'Composition, performance, production' },
+                            { id: 'writing', label: 'Writing', description: 'Fiction, non-fiction, poetry' },
+                            { id: 'photography', label: 'Photography', description: 'Digital and film photography' },
+                            { id: 'performance-acting', label: 'Performance/Acting', description: 'Theater, film, live performance' }
+                        ]
+                    },
+                    {
+                        id: 'technical-creation',
+                        label: 'Technical Creation',
+                        description: 'Technology-focused creative work',
+                        children: [
+                            { id: 'software-development', label: 'Software Development', description: 'Applications, systems, tools' },
+                            { id: 'game-development', label: 'Game Development', description: 'Video games, interactive media' },
+                            { id: 'web-development', label: 'Web Development', description: 'Websites, web applications' },
+                            { id: 'engineering', label: 'Engineering', description: 'Hardware, systems, innovation' },
+                            { id: 'data-science', label: 'Data Science', description: 'Analytics, visualization, AI/ML' }
+                        ]
+                    },
+                    {
+                        id: 'content-creation',
+                        label: 'Content Creation',
+                        description: 'Digital content and media production',
+                        children: [
+                            { id: 'video', label: 'Video', description: 'Film, streaming, video production' },
+                            { id: 'podcasting', label: 'Podcasting', description: 'Audio content, broadcasting' },
+                            { id: 'blogging', label: 'Blogging', description: 'Written online content' },
+                            { id: 'social-media', label: 'Social Media', description: 'Platform-specific content creation' }
+                        ]
+                    },
+                    {
+                        id: 'design-fields',
+                        label: 'Design Fields',
+                        description: 'Visual and functional design work',
+                        children: [
+                            { id: 'ux-ui-design', label: 'UX/UI Design', description: 'User experience, interface design' },
+                            { id: 'graphic-design', label: 'Graphic Design', description: 'Visual communication, branding' },
+                            { id: 'industrial-design', label: 'Industrial Design', description: 'Product design, manufacturing' }
+                        ]
+                    },
+                    {
+                        id: 'other',
+                        label: 'Other',
+                        description: 'Creative work not listed above',
+                        children: []
+                    }
+                ]
+                console.log('⚠️ Using hardcoded creator types fallback')
+            }
+        }
+
+        // Force centering with JavaScript as fallback
+        function ensureCentering() {
+            const container = document.querySelector('.container')
+            const body = document.body
+            
+            // Check if container is properly centered
+            const containerRect = container.getBoundingClientRect()
+            const bodyRect = body.getBoundingClientRect()
+            
+            const isHorizontallyCentered = Math.abs(
+                containerRect.left - (bodyRect.width - containerRect.width) / 2
+            ) < 10
+            
+            const isVerticallyCentered = Math.abs(
+                containerRect.top - (bodyRect.height - containerRect.height) / 2
+            ) < 10
+            
+            if (!isHorizontallyCentered || !isVerticallyCentered) {
+                console.log('Container not properly centered, applying JS fallback')
+                
+                // Apply fixed positioning fallback
+                container.style.position = 'fixed'
+                container.style.top = '50%'
+                container.style.left = '50%'
+                container.style.transform = 'translate(-50%, -50%)'
+                container.style.margin = '0'
+                
+                // Ensure body background covers full viewport
+                body.style.position = 'fixed'
+                body.style.top = '0'
+                body.style.left = '0'
+                body.style.width = '100%'
+                body.style.height = '100%'
+                body.style.overflow = 'hidden'
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show test mode indicator if in test mode
+            if (testOfflineMode) {
+                document.getElementById('testModeIndicator').style.display = 'block'
+            }
+            
+            updateConnectionStatus()
+            loadCreatorTypes() // Load creator types first
+            setupPrivacyControls()
+            setupCharacterCounters()
+            registerServiceWorker() // Enable offline functionality
+            
+            // Auto-sync pending submissions on page load if online
+            if (isOnline && !testOfflineMode) {
+                setTimeout(() => syncPendingFromLocal(), 2000)
+            }
+            
+            // Listen for connection changes
+            window.addEventListener('online', handleOnline)
+            window.addEventListener('offline', handleOffline)
+            
+            // Ensure proper centering after page load
+            setTimeout(ensureCentering, 100)
+            
+            // Re-check centering on window resize
+            window.addEventListener('resize', ensureCentering)
+        })
+
+        // Service Worker Registration for PWA/Offline functionality
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js')
+                    console.log('Service Worker registered successfully:', registration.scope)
+                    
+                    // Listen for service worker updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New content available, refresh page
+                                console.log('New content available, refreshing...')
+                                window.location.reload()
+                            }
+                        })
+                    })
+                    
+                    // Listen for messages from service worker
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        if (event.data.type === 'SYNC_PENDING_SUBMISSIONS') {
+                            console.log('Syncing pending submissions...')
+                            syncPendingFromLocal()
+                        }
+                    })
+                    
+                } catch (error) {
+                    console.log('Service Worker registration failed:', error)
+                }
+            } else {
+                console.log('Service Workers not supported')
+            }
+        }
+
+        // Creator Type Selector Logic
+        function renderCreatorTypes() {
+            if (!creatorTypes || creatorTypes.length === 0) {
+                creatorTypeList.innerHTML = '<div style="padding: 16px; text-align: center; color: #64748b;">Loading creator types...</div>'
+                return
+            }
+            
+            creatorTypeList.innerHTML = ''
+            
+            currentLevel.forEach(option => {
+                const optionDiv = document.createElement('div')
+                optionDiv.className = 'creator-type-option'
+                
+                if (selectedCreatorTypes.includes(option.id)) {
+                    optionDiv.classList.add('selected')
+                }
+                
+                optionDiv.innerHTML = `
+                    <div class="option-content">
+                        <span>${option.label}</span>
+                    </div>
+                    ${option.children ? '<span class="option-icon chevron-icon">›</span>' : 
+                      selectedCreatorTypes.includes(option.id) ? '<span class="option-icon check-icon">✓</span>' : ''}
+                `
+                
+                optionDiv.addEventListener('click', () => handleCreatorTypeClick(option))
+                creatorTypeList.appendChild(optionDiv)
+            })
+            
+            updateCreatorTypeHeader()
+            updateNavigationVisibility()
+        }
+
+        function handleCreatorTypeClick(option) {
+            if (option.children) {
+                // Navigate to children
+                navigationPath.push(option)
+                currentLevel = option.children
+                renderCreatorTypes()
+            } else if (option.id === 'other') {
+                // Toggle other input
+                const isVisible = otherInput.classList.contains('visible')
+                if (isVisible) {
+                    otherInput.classList.remove('visible')
+                    if (otherValue) {
+                        removeCreatorType(`other:${otherValue}`)
+                    }
+                } else {
+                    otherInput.classList.add('visible')
+                    if (otherText) {
+                        otherText.focus()
+                    }
+                }
+            } else {
+                // Toggle selection
+                if (selectedCreatorTypes.includes(option.id)) {
+                    removeCreatorType(option.id)
+                } else {
+                    selectedCreatorTypes.push(option.id)
+                }
+                renderCreatorTypes()
+                updateSelectedTypes()
+            }
+        }
+
+        function removeCreatorType(typeId) {
+            selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== typeId)
+            renderCreatorTypes()
+            updateSelectedTypes()
+        }
+
+        function updateCreatorTypeHeader() {
+            const count = selectedCreatorTypes.length + (otherValue ? 1 : 0)
+            selectionCount.textContent = `${count} selected`
+            
+            if (navigationPath.length === 0) {
+                currentCategoryLabel.textContent = 'Choose your creator types'
+            } else {
+                currentCategoryLabel.textContent = navigationPath[navigationPath.length - 1].label
+            }
+        }
+
+        function updateNavigationVisibility() {
+            if (navigationPath.length > 0) {
+                creatorTypeNav.classList.add('visible')
+                navPath.textContent = navigationPath.map(item => item.label).join(' › ')
+            } else {
+                creatorTypeNav.classList.remove('visible')
+            }
+        }
+
+        function updateSelectedTypes() {
+            selectedTypesContainer.innerHTML = ''
+            
+            selectedCreatorTypes.forEach(typeId => {
+                const option = findOptionById(typeId)
+                if (option) {
+                    const tag = document.createElement('div')
+                    tag.className = 'selected-type-tag'
+                    tag.innerHTML = `
+                        ${option.label}
+                        <button type="button" class="remove-type" onclick="removeCreatorType('${typeId}')">×</button>
+                    `
+                    selectedTypesContainer.appendChild(tag)
+                }
+            })
+            
+            if (otherValue) {
+                const tag = document.createElement('div')
+                tag.className = 'selected-type-tag'
+                tag.innerHTML = `
+                    Other: ${otherValue}
+                    <button type="button" class="remove-type" onclick="removeOtherType()">×</button>
+                `
+                selectedTypesContainer.appendChild(tag)
+            }
+        }
+
+        function findOptionById(id) {
+            function search(options) {
+                for (const option of options) {
+                    if (option.id === id) return option
+                    if (option.children) {
+                        const found = search(option.children)
+                        if (found) return found
+                    }
+                }
+                return null
+            }
+            return search(creatorTypes)
+        }
+
+        // Navigation handlers - add null check
+        if (navBack) {
+            navBack.addEventListener('click', () => {
+                if (navigationPath.length > 0) {
+                    navigationPath.pop()
+                    if (navigationPath.length === 0) {
+                        currentLevel = creatorTypes
+                    } else {
+                        currentLevel = navigationPath[navigationPath.length - 1].children
+                    }
+                    renderCreatorTypes()
+                }
+            })
+        }
+
+        // Other input handler - add null check
+        if (otherText) {
+            otherText.addEventListener('input', (e) => {
+                otherValue = e.target.value.trim()
+                updateCreatorTypeHeader()
+                updateSelectedTypes()
+            })
+        }
+
+        function removeOtherType() {
+            otherValue = ""
+            if (otherText) {
+                otherText.value = ""
+            }
+            otherInput.classList.remove('visible')
+            updateCreatorTypeHeader()
+            updateSelectedTypes()
+        }
+
+        // Privacy Controls
+        function setupPrivacyControls() {
+            const privacyCheckboxes = ['allowNameDisplay', 'allowCreatorTypeDisplay', 'allowCommentsDisplay', 'includeInGenesisGroup']
+            
+            privacyCheckboxes.forEach(id => {
+                const checkbox = document.getElementById(id)
+                checkbox.addEventListener('change', updateMemberShowcase)
+            })
+        }
+
+        function updateMemberShowcase() {
+            const anyDisplayAllowed = document.getElementById('allowNameDisplay').checked ||
+                                    document.getElementById('allowCreatorTypeDisplay').checked ||
+                                    document.getElementById('allowCommentsDisplay').checked ||
+                                    document.getElementById('includeInGenesisGroup').checked
+            
+            if (anyDisplayAllowed) {
+                memberShowcase.classList.add('visible')
+            } else {
+                memberShowcase.classList.remove('visible')
+            }
+        }
+
+        // Character counters
+        function setupCharacterCounters() {
+            // Bio character counter
+            if (memberBio && bioCharCount) {
+                memberBio.addEventListener('input', (e) => {
+                    const count = e.target.value.length
+                    bioCharCount.textContent = `${count}/300 characters`
+                    
+                    if (count > 250) {
+                        bioCharCount.style.color = '#f59e0b'
+                    } else {
+                        bioCharCount.style.color = '#059669'
+                    }
+                })
+            }
+
+            // Quote character counter
+            if (memberQuote && quoteCharCount) {
+                memberQuote.addEventListener('input', (e) => {
+                    const count = e.target.value.length
+                    quoteCharCount.textContent = `${count}/500 characters`
+                    
+                    if (count > 450) {
+                        quoteCharCount.style.color = '#f59e0b'
+                    } else {
+                        quoteCharCount.style.color = '#059669'
+                    }
+                })
+            }
+        }
+
+        // Connection handlers
+        function handleOnline() {
+            isOnline = true
+            updateConnectionStatus()
+            // Auto-sync pending submissions when coming back online
+            setTimeout(() => {
+                if (!testOfflineMode) {
+                    syncPendingFromLocal()
+                }
+            }, 1000)
+        }
+
+        function handleOffline() {
+            isOnline = false
+            updateConnectionStatus()
+        }
+
+        function updateConnectionStatus() {
+            if (isOnline) {
+                // Hide status when online - no need to show
+                connectionStatus.style.display = 'none'
+            } else {
+                // Show offline warning
+                connectionStatus.innerHTML = '🔴 Offline - Saves locally only'
+                connectionStatus.className = 'connection-status offline'
+                connectionStatus.style.display = 'block'
+            }
+        }
+
+        // Global variable to store current submission data
+        let currentSubmission = null
+
+        // Form submission handler - now shows confirmation step
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault()
+            
+            const formData = new FormData(form)
+            const name = formData.get('name').trim()
+            const email = formData.get('email').trim()
+            const country = formData.get('country')
+            const bio = memberBio.value.trim()
+            const quote = memberQuote.value.trim()
+            
+            // Validate
+            if (!name || !email) {
+                showError('Please fill in all required fields.')
+                return
+            }
+            
+            const totalTypes = selectedCreatorTypes.length + (otherValue ? 1 : 0)
+            if (totalTypes === 0) {
+                showError('Please select at least one creator type.')
+                return
+            }
+
+            // Check for duplicate email
+            if (await isDuplicateEmail(email)) {
+                showError('This email has already been registered.')
+                return
+            }
+            
+            // Prepare creator types array
+            const creatorTypesArray = [...selectedCreatorTypes]
+            if (otherValue) {
+                creatorTypesArray.push(`other:${otherValue}`)
+            }
+            
+            // Create submission object
+            currentSubmission = {
+                id: generateId(),
+                name: name,
+                email: email,
+                creator_types: creatorTypesArray,
+                country: country || null,
+                member_bio: bio || null,
+                member_quote: quote || null,
+                allow_name_display: document.getElementById('allowNameDisplay').checked,
+                allow_creator_type_display: document.getElementById('allowCreatorTypeDisplay').checked,
+                allow_comments_display: document.getElementById('allowCommentsDisplay').checked,
+                include_in_genesis_group: document.getElementById('includeInGenesisGroup').checked,
+                device_id: getDeviceId(),
+                referral_source: 'conference',
+                timestamp: new Date().toISOString(),
+                sync_status: 'pending',
+                attempts: 0
+            }
+            
+            // Show confirmation step
+            showConfirmationStep(currentSubmission)
+        })
+
+        // Actual submission function called after confirmation
+        async function submitConfirmedData(submission) {
+            // Always save locally first
+            saveToLocal(submission)
+            
+            // Try to save to database if online
+            if (isOnline) {
+                const success = await saveToDatabase(submission)
+                if (success) {
+                    submission.sync_status = 'synced'
+                    updateLocalSubmission(submission)
+                    
+                    // Send verification email
+                    const emailSent = await sendVerificationEmail(submission.email, submission.name)
+                    if (emailSent) {
+                        showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
+                    } else {
+                        showSuccess('Registration saved! Email verification will be sent shortly.')
+                    }
+                } else {
+                    showSuccess('Saved locally. Will sync when connection improves.')
+                }
+            } else {
+                showSuccess('Saved locally. Will sync when online.')
+            }
+            
+            // Only reset form after successful final submission
+            form.reset()
+            resetForm()
+            currentSubmission = null
+            showFormStep()
+        }
+
+        function resetForm() {
+            selectedCreatorTypes = []
+            otherValue = ""
+            navigationPath = []
+            currentLevel = creatorTypes
+            if (otherInput) otherInput.classList.remove('visible')
+            if (memberShowcase) memberShowcase.classList.remove('visible')
+            renderCreatorTypes()
+            updateSelectedTypes()
+            if (bioCharCount) bioCharCount.textContent = '0/300 characters'
+            if (quoteCharCount) quoteCharCount.textContent = '0/500 characters'
+        }
+
+        // Database operations
+        async function saveToDatabase(submission) {
+            // In test offline mode, simulate database failure
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Simulating database connection failure')
+                return false
+            }
+            
+            // Check if API is properly configured
+            if (!hasValidApiKey) {
+                console.log('💾 Skipping database save - API not configured. Saved locally only.')
+                return false
+            }
+            
+            try {
+                // Generate verification token
+                const { data: tokenData, error: tokenError } = await supabase
+                    .rpc('generate_verification_token')
+                
+                if (tokenError) {
+                    // Handle specific API key errors gracefully
+                    if (tokenError.message && tokenError.message.includes('Invalid API key')) {
+                        console.warn('🔑 API key configuration issue. Running in offline mode.')
+                        console.warn('💡 To fix: Set proper SUPABASE_ANON_KEY or create config.js')
+                        return false
+                    }
+                    console.error('Token generation error:', tokenError)
+                    return false
+                }
+                
+                const verificationToken = tokenData
+                
+                const { data, error } = await supabase
+                    .from('members')
+                    .insert([{
+                        name: submission.name,
+                        email: submission.email,
+                        creator_types: submission.creator_types,
+                        country: submission.country,
+                        member_bio: submission.member_bio,
+                        allow_name_display: submission.allow_name_display,
+                        allow_creator_type_display: submission.allow_creator_type_display,
+                        allow_comments_display: submission.allow_comments_display,
+                        include_in_genesis_group: submission.include_in_genesis_group,
+                        device_id: submission.device_id,
+                        referral_source: submission.referral_source,
+                        sync_source: 'conference',
+                        email_verified: false,
+                        verification_token: verificationToken,
+                        verification_sent_at: new Date().toISOString()
+                    }])
+                
+                if (error) {
+                    console.error('Database save error:', error)
+                    return false
+                }
+                
+                console.log('Saved to database:', data)
+                return true
+            } catch (error) {
+                console.error('Database connection error:', error)
+                return false
+            }
+        }
+
+        async function isDuplicateEmail(email) {
+            // Check local storage first
+            const localSubmissions = getLocalSubmissions()
+            const localDupe = localSubmissions.some(sub => sub.email === email)
+            
+            if (localDupe) return true
+            
+            // In test offline mode, skip database check
+            if (testOfflineMode) {
+                console.log('🧪 TEST MODE: Skipping database duplicate check')
+                return false
+            }
+            
+            // Check database if online
+            if (isOnline) {
+                try {
+                    const { data, error } = await supabase
+                        .from('members')
+                        .select('email')
+                        .eq('email', email)
+                        .limit(1)
+                    
+                    return data && data.length > 0
+                } catch (error) {
+                    console.error('Duplicate check error:', error)
+                    return false
+                }
+            }
+            
+            return false
+        }
+
+        // Local storage operations
+        function saveToLocal(submission) {
+            const submissions = getLocalSubmissions()
+            submissions.push(submission)
+            localStorage.setItem('dcSignups', JSON.stringify(submissions))
+        }
+
+        function getLocalSubmissions() {
+            return JSON.parse(localStorage.getItem('dcSignups') || '[]')
+        }
+
+        function updateLocalSubmission(updatedSubmission) {
+            const submissions = getLocalSubmissions()
+            const index = submissions.findIndex(sub => sub.id === updatedSubmission.id)
+            if (index !== -1) {
+                submissions[index] = updatedSubmission
+                localStorage.setItem('dcSignups', JSON.stringify(submissions))
+            }
+        }
+
+        // Sync pending submissions when coming back online
+        async function syncPendingFromLocal() {
+            if (!isOnline) return
+            
+            const submissions = getLocalSubmissions()
+            const pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending')
+            
+            if (pendingSubmissions.length === 0) {
+                console.log('No pending submissions to sync')
+                return
+            }
+            
+            console.log(`Syncing ${pendingSubmissions.length} pending submissions...`)
+            showSyncStatus(`🔄 Syncing ${pendingSubmissions.length} offline submissions...`)
+            
+            let syncedCount = 0
+            let failedCount = 0
+            
+            for (const submission of pendingSubmissions) {
+                const success = await saveToDatabase(submission)
+                if (success) {
+                    submission.sync_status = 'synced'
+                    updateLocalSubmission(submission)
+                    syncedCount++
+                    console.log(`Synced submission for ${submission.email}`)
+                } else {
+                    submission.attempts = (submission.attempts || 0) + 1
+                    updateLocalSubmission(submission)
+                    failedCount++
+                    console.log(`Failed to sync submission for ${submission.email}, attempt ${submission.attempts}`)
+                }
+            }
+            
+            if (syncedCount > 0) {
+                showSyncStatus(`✅ Synced ${syncedCount} submissions successfully!`, 'success')
+                setTimeout(() => hideSyncStatus(), 3000)
+            }
+            
+            if (failedCount > 0) {
+                showSyncStatus(`⚠️ ${failedCount} submissions failed to sync`, 'warning')
+                setTimeout(() => hideSyncStatus(), 5000)
+            }
+        }
+        
+        function showSyncStatus(message, type = 'info') {
+            const syncStatus = document.getElementById('syncStatus')
+            syncStatus.textContent = message
+            syncStatus.style.display = 'block'
+            
+            // Set color based on type
+            switch(type) {
+                case 'success':
+                    syncStatus.style.background = '#10b981'
+                    break
+                case 'warning':
+                    syncStatus.style.background = '#f59e0b'
+                    break
+                case 'error':
+                    syncStatus.style.background = '#ef4444'
+                    break
+                default:
+                    syncStatus.style.background = '#3b82f6'
+            }
+        }
+        
+        function hideSyncStatus() {
+            document.getElementById('syncStatus').style.display = 'none'
+        }
+
+        // UI helpers
+        function showSuccess(message) {
+            hideMessages()
+            successMessage.textContent = message
+            successMessage.style.display = 'block'
+            setTimeout(() => successMessage.style.display = 'none', 5000)
+        }
+
+        function showError(message) {
+            hideMessages()
+            errorMessage.textContent = message
+            errorMessage.style.display = 'block'
+            setTimeout(() => errorMessage.style.display = 'none', 5000)
+        }
+
+        function hideMessages() {
+            successMessage.style.display = 'none'
+            errorMessage.style.display = 'none'
+        }
+
+        // Utility functions
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2)
+        }
+
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('dcDeviceId')
+            if (!deviceId) {
+                deviceId = 'device-' + generateId()
+                localStorage.setItem('dcDeviceId', deviceId)
+            }
+            return deviceId
+        }
+
+        // Step Navigation Functions
+        function showFormStep() {
+            // More aggressive hiding of confirmation step
+            const confirmationStep = document.getElementById('confirmationStep')
+            if (confirmationStep) {
+                confirmationStep.style.display = 'none'
+                confirmationStep.style.visibility = 'hidden'
+                confirmationStep.style.zIndex = '-1'
+            }
+            
+            // Hide offline viewer as well
+            const offlineViewer = document.getElementById('offlineViewer')
+            if (offlineViewer) {
+                offlineViewer.style.display = 'none'
+                offlineViewer.style.visibility = 'hidden'
+                offlineViewer.style.zIndex = '-1'
+            }
+            
+            // Show the form and its parent scrollable content
+            const formElement = document.getElementById('signupForm')
+            if (formElement) {
+                formElement.style.display = 'block'
+                // Get the parent scrollable-content that contains the form
+                const scrollableContent = formElement.parentElement
+                if (scrollableContent && scrollableContent.classList.contains('scrollable-content')) {
+                    scrollableContent.style.display = 'block'
+                }
+            }
+            
+            // Show the submit button - find the one with submitBtn
+            const allFixedBottoms = document.querySelectorAll('.fixed-bottom')
+            allFixedBottoms.forEach(fb => {
+                if (fb.querySelector('#submitBtn')) {
+                    fb.style.display = 'block'
+                }
+            })
+            
+            // Show other UI elements that should be visible with the form
+            const viewToggle = document.getElementById('viewToggle')
+            if (viewToggle) viewToggle.style.display = 'none'
+            
+            const connectionStatus = document.getElementById('connectionStatus')
+            if (connectionStatus) connectionStatus.style.display = 'block'
+            
+            updateViewToggle()
+        }
+
+        function showConfirmationStep(submission) {
+            // Hide the entire form section including the submit button
+            const formElement = document.getElementById('signupForm')
+            if (formElement) {
+                formElement.style.display = 'none'
+                // Get the parent scrollable-content that contains the form
+                const scrollableContent = formElement.parentElement
+                if (scrollableContent && scrollableContent.classList.contains('scrollable-content')) {
+                    scrollableContent.style.display = 'none'
+                }
+            }
+            
+            // Hide the submit button - find the one with submitBtn
+            const allFixedBottoms = document.querySelectorAll('.fixed-bottom')
+            allFixedBottoms.forEach(fb => {
+                if (fb.querySelector('#submitBtn')) {
+                    fb.style.display = 'none'
+                }
+            })
+            
+            // Hide other form-related UI elements
+            const connectionStatus = document.getElementById('connectionStatus')
+            if (connectionStatus) connectionStatus.style.display = 'none'
+            
+            // Show confirmation step with proper visibility and z-index
+            const confirmationStep = document.getElementById('confirmationStep')
+            if (confirmationStep) {
+                confirmationStep.style.display = 'flex'
+                confirmationStep.style.visibility = 'visible'
+                confirmationStep.style.zIndex = '100'
+            }
+            
+            // Make sure offline viewer is hidden
+            const offlineViewer = document.getElementById('offlineViewer')
+            if (offlineViewer) {
+                offlineViewer.style.display = 'none'
+                offlineViewer.style.visibility = 'hidden'
+                offlineViewer.style.zIndex = '-1'
+            }
+            
+            hideMessages()
+            
+            // Populate confirmation details
+            populateConfirmationDetails(submission)
+        }
+
+        function restoreFormData(submission) {
+            // Restore basic form fields
+            document.getElementById('name').value = submission.name || ''
+            document.getElementById('email').value = submission.email || ''
+            document.getElementById('country').value = submission.country || ''
+            
+            // Restore creator types
+            selectedCreatorTypes = submission.creator_types.filter(type => !type.startsWith('other:'))
+            const otherTypes = submission.creator_types.filter(type => type.startsWith('other:'))
+            if (otherTypes.length > 0) {
+                otherValue = otherTypes[0].replace('other:', '')
+                const otherTextElement = document.getElementById('otherText')
+                if (otherTextElement) {
+                    otherTextElement.value = otherValue
+                }
+                const otherInputElement = document.getElementById('otherInput')
+                if (otherInputElement) {
+                    otherInputElement.classList.add('visible')
+                }
+            }
+            
+            // Restore bio and quote
+            if (submission.member_bio) {
+                const memberBioElement = document.getElementById('memberBio')
+                const bioCharCountElement = document.getElementById('bioCharCount')
+                if (memberBioElement) {
+                    memberBioElement.value = submission.member_bio
+                }
+                if (bioCharCountElement) {
+                    bioCharCountElement.textContent = `${submission.member_bio.length}/300 characters`
+                }
+            }
+            if (submission.member_quote) {
+                const memberQuoteElement = document.getElementById('memberQuote')
+                const quoteCharCountElement = document.getElementById('quoteCharCount')
+                if (memberQuoteElement) {
+                    memberQuoteElement.value = submission.member_quote
+                }
+                if (quoteCharCountElement) {
+                    quoteCharCountElement.textContent = `${submission.member_quote.length}/500 characters`
+                }
+            }
+            
+            // Restore privacy settings
+            const allowNameElement = document.getElementById('allowNameDisplay')
+            const allowCreatorTypeElement = document.getElementById('allowCreatorTypeDisplay')
+            const allowCommentsElement = document.getElementById('allowCommentsDisplay')
+            const includeGenesisElement = document.getElementById('includeInGenesisGroup')
+            
+            if (allowNameElement) allowNameElement.checked = submission.allow_name_display || false
+            if (allowCreatorTypeElement) allowCreatorTypeElement.checked = submission.allow_creator_type_display || false
+            if (allowCommentsElement) allowCommentsElement.checked = submission.allow_comments_display || false
+            if (includeGenesisElement) includeGenesisElement.checked = submission.include_in_genesis_group || false
+            
+            // Update UI elements
+            renderCreatorTypes()
+            updateSelectedTypes()
+            updatePrivacyControls()
+        }
+
+        function showOfflineViewer() {
+            document.getElementById('signupForm').style.display = 'none'
+            document.querySelector('.fixed-bottom').style.display = 'none'
+            document.getElementById('confirmationStep').style.display = 'none'
+            document.getElementById('offlineViewer').style.display = 'flex'
+            hideMessages()
+            
+            // Populate offline submissions
+            populateOfflineSubmissions()
+            updateViewToggle()
+        }
+
+        function populateConfirmationDetails(submission) {
+            const container = document.getElementById('confirmationDetails')
+            
+            // Format creator types for display
+            const creatorTypesDisplay = submission.creator_types.map(type => {
+                if (type.startsWith('other:')) {
+                    return type.replace('other:', 'Other: ')
+                }
+                return type
+            }).map(type => `<span class="creator-type-chip">${type}</span>`).join('')
+
+            container.innerHTML = `
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Name:</span>
+                    <span class="confirmation-value">${submission.name}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Email:</span>
+                    <span class="confirmation-value">${submission.email}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Creator Types:</span>
+                    <div class="confirmation-value">
+                        <div class="creator-types-list">${creatorTypesDisplay}</div>
+                    </div>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Country:</span>
+                    <span class="confirmation-value">${submission.country || 'Not specified'}</span>
+                </div>
+                ${submission.member_bio ? `
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Bio:</span>
+                    <span class="confirmation-value">${submission.member_bio}</span>
+                </div>
+                ` : ''}
+                ${submission.member_quote ? `
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Testimonial:</span>
+                    <span class="confirmation-value">"${submission.member_quote}"</span>
+                </div>
+                ` : ''}
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Genesis Group:</span>
+                    <span class="confirmation-value">${submission.include_in_genesis_group ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Display Name:</span>
+                    <span class="confirmation-value">${submission.allow_name_display ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Display Creator Types:</span>
+                    <span class="confirmation-value">${submission.allow_creator_type_display ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Display Comments:</span>
+                    <span class="confirmation-value">${submission.allow_comments_display ? 'Yes' : 'No'}</span>
+                </div>
+            `
+        }
+
+        function populateOfflineSubmissions() {
+            const container = document.getElementById('offlineSubmissionsList')
+            const submissions = getLocalSubmissions().filter(sub => sub.sync_status === 'pending')
+            
+            if (submissions.length === 0) {
+                container.innerHTML = '<div class="no-offline-submissions">No offline submissions waiting to sync</div>'
+                return
+            }
+
+            container.innerHTML = submissions.map(sub => `
+                <div class="offline-submission" data-id="${sub.id}">
+                    <div class="offline-submission-header">
+                        <span class="offline-submission-name">${sub.name}</span>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="offline-submission-time">${new Date(sub.timestamp).toLocaleString()}</span>
+                            <button class="btn btn-edit" onclick="editOfflineSubmission('${sub.id}')" style="padding: 4px 8px; font-size: 10px;">Edit</button>
+                            <button class="btn btn-delete" onclick="deleteOfflineSubmission('${sub.id}')" style="padding: 4px 8px; font-size: 10px;">Delete</button>
+                        </div>
+                    </div>
+                    <div class="offline-submission-details">
+                        ${sub.email} • ${sub.creator_types.length} creator type(s)
+                        ${sub.country ? ` • ${sub.country}` : ''}
+                        ${sub.member_bio ? `<br><strong>Bio:</strong> ${sub.member_bio.substring(0, 80)}${sub.member_bio.length > 80 ? '...' : ''}` : ''}
+                        ${sub.member_quote ? `<br><strong>Testimonial:</strong> "${sub.member_quote.substring(0, 80)}${sub.member_quote.length > 80 ? '...' : ''}"` : ''}
+                    </div>
+                </div>
+            `).join('')
+        }
+
+        function updateViewToggle() {
+            const offlineSubmissions = getLocalSubmissions().filter(sub => sub.sync_status === 'pending')
+            document.getElementById('offlineCount').textContent = offlineSubmissions.length
+            
+            // Show view toggle if there are offline submissions
+            if (offlineSubmissions.length > 0) {
+                document.getElementById('viewToggle').style.display = 'block'
+            }
+        }
+
+        // Offline submission management functions
+        function editOfflineSubmission(submissionId) {
+            const submissions = getLocalSubmissions()
+            const submission = submissions.find(sub => sub.id === submissionId)
+            
+            if (!submission) {
+                showError('Submission not found')
+                return
+            }
+
+            // Populate form with submission data
+            document.getElementById('name').value = submission.name
+            document.getElementById('email').value = submission.email
+            
+            // Set country
+            const countrySelect = document.getElementById('country')
+            if (submission.country) {
+                countrySelect.value = submission.country
+            }
+
+            // Set creator types
+            selectedCreatorTypes = submission.creator_types.filter(type => !type.startsWith('other:'))
+            const otherTypes = submission.creator_types.filter(type => type.startsWith('other:'))
+            if (otherTypes.length > 0) {
+                otherValue = otherTypes[0].replace('other:', '')
+                document.getElementById('otherText').value = otherValue
+                otherInput.classList.add('visible')
+            }
+
+            // Set bio and quote
+            if (submission.member_bio && memberBio && bioCharCount) {
+                memberBio.value = submission.member_bio
+                bioCharCount.textContent = `${submission.member_bio.length}/300 characters`
+            }
+            if (submission.member_quote && memberQuote && quoteCharCount) {
+                memberQuote.value = submission.member_quote
+                quoteCharCount.textContent = `${submission.member_quote.length}/500 characters`
+            }
+
+            // Set checkboxes
+            document.getElementById('allowNameDisplay').checked = submission.allow_name_display
+            document.getElementById('allowCreatorTypeDisplay').checked = submission.allow_creator_type_display  
+            document.getElementById('allowCommentsDisplay').checked = submission.allow_comments_display
+            document.getElementById('includeInGenesisGroup').checked = submission.include_in_genesis_group
+
+            // Update UI
+            updateSelectedTypes()
+            updatePrivacyControls()
+
+            // Delete the old submission and switch to form view
+            deleteOfflineSubmissionSilent(submissionId)
+            showFormStep()
+            
+            showSuccess('Submission loaded for editing. Make your changes and resubmit.')
+        }
+
+        function deleteOfflineSubmission(submissionId) {
+            const submissions = getLocalSubmissions()
+            const submission = submissions.find(sub => sub.id === submissionId)
+            
+            if (!submission) {
+                showError('Submission not found')
+                return
+            }
+
+            if (!confirm(`Delete offline submission for "${submission.name}" (${submission.email})? This cannot be undone.`)) {
+                return
+            }
+
+            deleteOfflineSubmissionSilent(submissionId)
+            populateOfflineSubmissions()
+            updateViewToggle()
+            showSuccess('Offline submission deleted')
+        }
+
+        function deleteOfflineSubmissionSilent(submissionId) {
+            const submissions = getLocalSubmissions()
+            const updatedSubmissions = submissions.filter(sub => sub.id !== submissionId)
+            localStorage.setItem('dcSignups', JSON.stringify(updatedSubmissions))
+        }
+
+        // Global function for onclick handler
+        function handleEditDetails() {
+            console.log('handleEditDetails called')
+            if (currentSubmission) {
+                console.log('Restoring form data:', currentSubmission)
+                try {
+                    restoreFormData(currentSubmission)
+                    console.log('restoreFormData completed successfully')
+                } catch (error) {
+                    console.error('❌ ERROR in restoreFormData:', error)
+                    console.error('Error stack:', error.stack)
+                    console.log('currentSubmission data:', currentSubmission)
+                }
+            }
+            console.log('Calling showFormStep')
+            try {
+                showFormStep()
+                console.log('showFormStep completed successfully')
+            } catch (error) {
+                console.error('❌ ERROR in showFormStep:', error)
+                console.error('Error stack:', error.stack)
+            }
+        }
+
+        // Event Listeners for new UI elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Confirmation step buttons - add null checks since they're in hidden elements
+            // Edit button event listener removed - using onclick handler instead
+
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn')
+            if (confirmSubmitBtn) {
+                confirmSubmitBtn.addEventListener('click', async function() {
+                    if (currentSubmission) {
+                        await submitConfirmedData(currentSubmission)
+                        currentSubmission = null
+                    }
+                })
+            }
+
+            // View toggle buttons
+            document.getElementById('formViewBtn').addEventListener('click', function() {
+                showFormStep()
+                document.getElementById('formViewBtn').classList.add('active')
+                document.getElementById('offlineViewBtn').classList.remove('active')
+            })
+
+            document.getElementById('offlineViewBtn').addEventListener('click', function() {
+                showOfflineViewer()
+                document.getElementById('offlineViewBtn').classList.add('active')
+                document.getElementById('formViewBtn').classList.remove('active')
+            })
+
+            // Offline viewer buttons - add null checks
+            const backToFormBtn = document.getElementById('backToFormBtn')
+            if (backToFormBtn) {
+                backToFormBtn.addEventListener('click', function() {
+                    showFormStep()
+                    document.getElementById('formViewBtn').classList.add('active')
+                    document.getElementById('offlineViewBtn').classList.remove('active')
+                })
+            }
+
+            const syncNowBtn = document.getElementById('syncNowBtn')
+            if (syncNowBtn) {
+                syncNowBtn.addEventListener('click', async function() {
+                    await syncPendingFromLocal()
+                    populateOfflineSubmissions()
+                    updateViewToggle()
+                })
+            }
+
+            // Initialize view toggle state
+            updateViewToggle()
+        })
+
+        // Navigation Functions
+        function goToHomepage() {
+            window.open('https://distributedcreatives.org', '_blank')
+        }
+
+        // Handle form submission when submit button is outside the form
+        function handleFormSubmit() {
+            const form = document.getElementById('signupForm')
+            
+            // Create a synthetic submit event
+            const submitEvent = new Event('submit', {
+                bubbles: true,
+                cancelable: true
+            })
+            
+            // Dispatch the submit event to trigger the existing form handler
+            form.dispatchEvent(submitEvent)
+        }
+
+        // Simple Creator Type Modal Functions
+        function openCreatorTypeModal() {
+            console.log('Opening creator type modal...')
+            const modal = document.getElementById('creatorTypeModal')
+            if (!modal) {
+                console.error('Modal element not found!')
+                return
+            }
+            modal.style.display = 'flex'
+            console.log('Modal opened, loading creator types...')
+            loadCreatorTypesIntoModal()
+        }
+
+        function closeCreatorTypeModal() {
+            document.getElementById('creatorTypeModal').style.display = 'none'
+        }
+
+        function loadCreatorTypesIntoModal() {
+            const container = document.getElementById('creatorTypeCategories')
+            
+            console.log('Loading creator types into modal:', creatorTypes.length, 'categories')
+            
+            if (!creatorTypes || creatorTypes.length === 0) {
+                container.innerHTML = '<p>No creator types available. Please check the database connection.</p>'
+                return
+            }
+            
+            container.innerHTML = creatorTypes.map(category => {
+                const categorySelected = selectedCreatorTypes.includes(category.id)
+                const hasSelectedChildren = category.children && category.children.some(child => 
+                    selectedCreatorTypes.includes(child.id)
+                )
+                
+                console.log(`Category: ${category.label}, has children: ${!!category.children}, children count: ${category.children ? category.children.length : 0}`)
+                
+                return `
+                    <div class="creator-category">
+                        <div class="category-header ${categorySelected ? 'selected' : ''}" 
+                             onclick="toggleCreatorType('${category.id}')">
+                            <div>
+                                <div class="category-title">${category.label}</div>
+                                <div class="category-description">${category.description}</div>
+                            </div>
+                            <div class="category-check ${categorySelected ? 'selected' : ''}">
+                                ${categorySelected ? '✓' : ''}
+                            </div>
+                        </div>
+                        ${category.id === 'other' ? `
+                            <div class="subcategories">
+                                <input type="text" 
+                                       id="otherCreatorTypeInput" 
+                                       placeholder="e.g., Pottery, Stand-up Comedy, Fashion Design..."
+                                       value="${otherValue || ''}"
+                                       onkeyup="handleOtherInput(this.value)"
+                                       onclick="handleOtherInputClick(event)"
+                                       style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
+                            </div>
+                        ` : category.children && category.children.length > 0 ? `
+                            <div class="subcategories">
+                                ${category.children.map(child => {
+                                    const childSelected = selectedCreatorTypes.includes(child.id)
+                                    console.log(`  Child: ${child.label}, selected: ${childSelected}`)
+                                    return `
+                                        <div class="subcategory-card ${childSelected ? 'selected' : ''}"
+                                             onclick="event.stopPropagation(); toggleCreatorType('${child.id}');">
+                                            <div class="subcategory-title">${child.label}</div>
+                                            <div class="subcategory-description">${child.description}</div>
+                                        </div>
+                                    `
+                                }).join('')}
+                            </div>
+                        ` : category.children ? `
+                            <div class="subcategories">
+                                <p style="padding: 16px; color: #6b7280; font-style: italic;">No subcategories available</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `
+            }).join('')
+            
+            console.log('Modal HTML generated, container updated')
+        }
+
+        function toggleCreatorType(typeId) {
+            const isCurrentlySelected = selectedCreatorTypes.includes(typeId)
+            
+            if (typeId === 'other') {
+                // Special handling for "other" category
+                if (isCurrentlySelected) {
+                    // Deselect "other" - keep the text but don't include it in selection
+                    selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== 'other')
+                    updateOtherCheckboxState(false)
+                } else {
+                    // Select "other" - include it in selection
+                    selectedCreatorTypes.push('other')
+                    updateOtherCheckboxState(true)
+                    // Focus the input field when manually selecting
+                    const otherInput = document.getElementById('otherCreatorTypeInput')
+                    if (otherInput) {
+                        otherInput.focus()
+                    }
+                }
+                return // Don't refresh the entire modal for "other"
+            }
+            
+            if (isCurrentlySelected) {
+                // Remove the type
+                selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== typeId)
+            } else {
+                // Add the type
+                selectedCreatorTypes.push(typeId)
+                
+                // Check if this is a parent category
+                const parentCategory = creatorTypes.find(cat => cat.id === typeId)
+                if (parentCategory && parentCategory.children) {
+                    // If selecting a parent, remove any selected children to avoid duplication
+                    const childIds = parentCategory.children.map(child => child.id)
+                    selectedCreatorTypes = selectedCreatorTypes.filter(id => !childIds.includes(id))
+                } else {
+                    // If selecting a child, remove the parent category if it was selected
+                    const parentOfChild = creatorTypes.find(cat => 
+                        cat.children && cat.children.some(child => child.id === typeId)
+                    )
+                    if (parentOfChild && selectedCreatorTypes.includes(parentOfChild.id)) {
+                        selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== parentOfChild.id)
+                    }
+                }
+            }
+            
+            loadCreatorTypesIntoModal() // Refresh to show selection
+        }
+
+        function saveCreatorTypes() {
+            const modalOtherInput = document.getElementById('otherCreatorTypeInput')
+            if (modalOtherInput) {
+                const otherType = modalOtherInput.value.trim()
+                if (otherType) {
+                    otherValue = otherType
+                    if (!selectedCreatorTypes.includes('other')) {
+                        selectedCreatorTypes.push('other')
+                    }
+                } else if (selectedCreatorTypes.includes('other')) {
+                    // If other is selected but no text, remove it
+                    selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== 'other')
+                    otherValue = ""
+                }
+            }
+            
+            updateSelectedTypesDisplay()
+            closeCreatorTypeModal()
+        }
+
+        function updateSelectedTypesDisplay() {
+            const display = document.getElementById('creatorTypeDisplay')
+            const count = document.getElementById('selectionCount')
+            const container = document.getElementById('selectedTypes')
+            
+            const totalCount = selectedCreatorTypes.length + (otherValue ? 1 : 0)
+            count.textContent = `${totalCount} selected`
+            
+            if (totalCount > 0) {
+                display.textContent = 'Creator types selected'
+            } else {
+                display.textContent = 'Click to select your creator types'
+            }
+            
+            // Show selected types as tags
+            container.innerHTML = ''
+            selectedCreatorTypes.forEach(typeId => {
+                const type = findCreatorTypeById(typeId)
+                if (type) {
+                    const tag = document.createElement('div')
+                    tag.className = 'selected-type-tag'
+                    tag.innerHTML = `${type.label} <button type="button" class="remove-type" onclick="removeCreatorType('${typeId}')">×</button>`
+                    container.appendChild(tag)
+                }
+            })
+            
+            if (otherValue) {
+                const tag = document.createElement('div')
+                tag.className = 'selected-type-tag'
+                tag.innerHTML = `Other: ${otherValue} <button type="button" class="remove-type" onclick="removeOtherType()">×</button>`
+                container.appendChild(tag)
+            }
+        }
+
+        function findCreatorTypeById(id) {
+            for (const category of creatorTypes) {
+                if (category.id === id) return category
+                if (category.children) {
+                    for (const child of category.children) {
+                        if (child.id === id) return child
+                    }
+                }
+            }
+            return null
+        }
+
+        function removeCreatorType(typeId) {
+            selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== typeId)
+            updateSelectedTypesDisplay()
+        }
+
+        function removeOtherType() {
+            otherValue = ""
+            const otherInput = document.getElementById('otherCreatorType')
+            const modalOtherInput = document.getElementById('otherCreatorTypeInput')
+            if (otherInput) otherInput.value = ""
+            if (modalOtherInput) modalOtherInput.value = ""
+            
+            // Remove "other" from selected types
+            selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== 'other')
+            updateSelectedTypesDisplay()
+        }
+
+        function handleOtherInput(value) {
+            const trimmedValue = value.trim()
+            otherValue = trimmedValue
+            
+            if (trimmedValue) {
+                // Auto-select "other" category when text is entered
+                if (!selectedCreatorTypes.includes('other')) {
+                    selectedCreatorTypes.push('other')
+                    // Only update the checkbox visual state, don't reload entire modal
+                    updateOtherCheckboxState(true)
+                }
+            } else {
+                // Remove "other" selection when text is cleared
+                if (selectedCreatorTypes.includes('other')) {
+                    selectedCreatorTypes = selectedCreatorTypes.filter(id => id !== 'other')
+                    // Only update the checkbox visual state, don't reload entire modal
+                    updateOtherCheckboxState(false)
+                }
+            }
+        }
+
+        function updateOtherCheckboxState(selected) {
+            // Find the Other category header and update its visual state
+            const otherHeaders = document.querySelectorAll('.category-header')
+            otherHeaders.forEach(header => {
+                const titleElement = header.querySelector('.category-title')
+                if (titleElement && titleElement.textContent === 'Other') {
+                    const checkElement = header.querySelector('.category-check')
+                    if (selected) {
+                        header.classList.add('selected')
+                        checkElement.classList.add('selected')
+                        checkElement.textContent = '✓'
+                    } else {
+                        header.classList.remove('selected')
+                        checkElement.classList.remove('selected')
+                        checkElement.textContent = ''
+                    }
+                }
+            })
+            
+            // Update the input field visual state
+            const otherInput = document.getElementById('otherCreatorTypeInput')
+            if (otherInput) {
+                if (selected) {
+                    // Enabled state - normal styling
+                    otherInput.style.color = '#374151'
+                    otherInput.style.backgroundColor = 'white'
+                    otherInput.style.borderColor = '#e5e7eb'
+                    otherInput.style.opacity = '1'
+                } else {
+                    // Disabled state - grayed out
+                    otherInput.style.color = '#9ca3af'
+                    otherInput.style.backgroundColor = '#f9fafb'
+                    otherInput.style.borderColor = '#d1d5db'
+                    otherInput.style.opacity = '0.6'
+                }
+            }
+        }
+
+        function handleOtherInputClick(event) {
+            event.stopPropagation()
+            
+            // Auto-select "other" when clicking in the input field
+            if (!selectedCreatorTypes.includes('other')) {
+                selectedCreatorTypes.push('other')
+                updateOtherCheckboxState(true)
+            }
+        }
+        
+        // DEVELOPMENT AUTO-RELOAD - REMOVE BEFORE DEPLOYMENT
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            let lastModified = null;
+            setInterval(async () => {
+                try {
+                    const response = await fetch(location.href, { method: 'HEAD' });
+                    const modified = response.headers.get('last-modified');
+                    if (lastModified && lastModified !== modified) {
+                        console.log('Page changed, reloading...');
+                        location.reload();
+                    }
+                    lastModified = modified;
+                } catch (e) {
+                    // Ignore errors
+                }
+            }, 2000); // Check every 2 seconds
+            console.log('Auto-reload enabled (dev mode)');
+        }
+    </script>
+</body>
+</html>

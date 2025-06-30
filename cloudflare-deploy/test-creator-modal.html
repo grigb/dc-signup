@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Creator Type Modal</title>
+    <style>
+        .creator-category {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .category-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        .category-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .category-description {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .subcategories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            padding: 16px;
+            background: #fafbfc;
+        }
+
+        .subcategory-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .subcategory-card:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+        }
+
+        .subcategory-card.selected {
+            border-color: #667eea;
+            background: #f0f9ff;
+        }
+
+        .subcategory-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .subcategory-description {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <h1>Creator Type Modal Test</h1>
+    
+    <div id="creatorTypeCategories">
+        <!-- Will be populated by JavaScript -->
+    </div>
+
+    <script>
+        const testData = [
+            {
+                id: "traditional-arts",
+                label: "Traditional Arts",
+                description: "Classic artistic mediums and forms",
+                children: [
+                    { id: "visual-arts", label: "Visual Arts", description: "Painting, drawing, sculpture" },
+                    { id: "music", label: "Music", description: "Composition, performance, production" },
+                    { id: "writing", label: "Writing", description: "Fiction, non-fiction, poetry" }
+                ]
+            },
+            {
+                id: "technical-creation",
+                label: "Technical Creation", 
+                description: "Technology-focused creative work",
+                children: [
+                    { id: "software-development", label: "Software Development", description: "Applications, systems, tools" },
+                    { id: "web-development", label: "Web Development", description: "Websites, web applications" }
+                ]
+            }
+        ]
+
+        let selectedTypes = []
+
+        function toggleType(typeId) {
+            if (selectedTypes.includes(typeId)) {
+                selectedTypes = selectedTypes.filter(id => id !== typeId)
+            } else {
+                selectedTypes.push(typeId)
+            }
+            renderTypes()
+        }
+
+        function renderTypes() {
+            const container = document.getElementById('creatorTypeCategories')
+            
+            container.innerHTML = testData.map(category => `
+                <div class="creator-category">
+                    <div class="category-header" onclick="toggleType('${category.id}')">
+                        <div class="category-title">${category.label} ${selectedTypes.includes(category.id) ? '✓' : ''}</div>
+                        <div class="category-description">${category.description}</div>
+                    </div>
+                    <div class="subcategories">
+                        ${category.children.map(child => `
+                            <div class="subcategory-card ${selectedTypes.includes(child.id) ? 'selected' : ''}"
+                                 onclick="toggleType('${child.id}')">
+                                <div class="subcategory-title">${child.label}</div>
+                                <div class="subcategory-description">${child.description}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('')
+        }
+
+        // Initialize
+        renderTypes()
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+name: Build and Validate
+
+on:
+  push:
+    branches: [ main, feature/** ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm ci
+      - run: npm run build
+      - name: Ensure dist is not modified
+        run: |
+          git diff --exit-code dist || {
+            echo "❌ dist/ contains changes after build. Commit build outputs should not be edited manually.";
+            exit 1;
+          }

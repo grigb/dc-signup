@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join Distributed Creatives</title>
+    <title>Join Genesis Members - Distributed Creatives</title>
     <meta name="description" content="Join the founding members of Distributed Creatives - the creator-owned network advocating for artist rights and community building.">
     
     <!-- PWA Meta Tags -->
@@ -1278,10 +1278,10 @@
         // Configuration - Use environment variables in production
         // Environment variables - replaced by Cloudflare Pages build process
         const SUPABASE_URL = 'https://jgnyutkpxapaghderjmj.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyOTE5MTMsImV4cCI6MjA2Njg2NzkxM30.4GkS72fKX9trYQIfeXMmZJ2iM2menAjYdCHuHb3dOs8'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU5NDEsImV4cCI6MjA2Njc5MTk0MX0.kIHBUGVwkWN1zxkzHXYk8gpofr5sYmiQrOGkxpaqu2I'
         
         // Check if API keys are properly configured
-        const hasValidApiKey = SUPABASE_ANON_KEY !== '__SUPABASE_' + 'ANON_KEY__' && SUPABASE_ANON_KEY.startsWith('eyJ')
+        const hasValidApiKey = SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU5NDEsImV4cCI6MjA2Njc5MTk0MX0.kIHBUGVwkWN1zxkzHXYk8gpofr5sYmiQrOGkxpaqu2I' && SUPABASE_ANON_KEY.startsWith('eyJ')
         
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -1858,8 +1858,13 @@
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
                     
-                    // Email verification is handled automatically by the database
-                    showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
+                    // Send verification email
+                    const emailSent = await sendVerificationEmail(submission.email, submission.name)
+                    if (emailSent) {
+                        showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
+                    } else {
+                        showSuccess('Registration saved! Email verification will be sent shortly.')
+                    }
                 } else {
                     showSuccess('Saved locally. Will sync when connection improves.')
                 }
@@ -1902,8 +1907,22 @@
             }
             
             try {
-                // Generate verification token - the database function will handle sending the email
-                const verificationToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
+                // Generate verification token
+                const { data: tokenData, error: tokenError } = await supabase
+                    .rpc('generate_verification_token')
+                
+                if (tokenError) {
+                    // Handle specific API key errors gracefully
+                    if (tokenError.message && tokenError.message.includes('Invalid API key')) {
+                        console.warn('🔑 API key configuration issue. Running in offline mode.')
+                        console.warn('💡 To fix: Set proper SUPABASE_ANON_KEY or create config.js')
+                        return false
+                    }
+                    console.error('Token generation error:', tokenError)
+                    return false
+                }
+                
+                const verificationToken = tokenData
                 
                 const { data, error } = await supabase
                     .from('members')
@@ -2551,118 +2570,69 @@
         }
 
         function loadCreatorTypesIntoModal() {
-            console.log('🔧 LOADING CREATOR TYPES INTO MODAL - START')
             const container = document.getElementById('creatorTypeCategories')
-
-            if (!container) {
-                console.error('❌ Container element not found!')
+            
+            console.log('Loading creator types into modal:', creatorTypes.length, 'categories')
+            
+            if (!creatorTypes || creatorTypes.length === 0) {
+                container.innerHTML = '<p>No creator types available. Please check the database connection.</p>'
                 return
             }
-
-            console.log('✅ Container found:', container)
-
-            // EMERGENCY FIX: Always use hardcoded data for immediate deployment
-            creatorTypes = [
-                {
-                    id: "traditional-arts",
-                    label: "Traditional Arts",
-                    description: "Classic artistic mediums and forms",
-                    children: [
-                        { id: "visual-arts", label: "Visual Arts", description: "Painting, drawing, sculpture" },
-                        { id: "music", label: "Music", description: "Composition, performance, production" },
-                        { id: "writing", label: "Writing", description: "Fiction, non-fiction, poetry" },
-                        { id: "photography", label: "Photography", description: "Digital and film photography" },
-                        { id: "performance-acting", label: "Performance/Acting", description: "Theater, film, live performance" }
-                    ]
-                },
-                {
-                    id: "technical-creation",
-                    label: "Technical Creation",
-                    description: "Technology-focused creative work",
-                    children: [
-                        { id: "software-development", label: "Software Development", description: "Applications, systems, tools" },
-                        { id: "game-development", label: "Game Development", description: "Video games, interactive media" },
-                        { id: "web-development", label: "Web Development", description: "Websites, web applications" },
-                        { id: "engineering", label: "Engineering", description: "Hardware, systems, innovation" },
-                        { id: "data-science", label: "Data Science", description: "Analytics, visualization, AI/ML" }
-                    ]
-                },
-                {
-                    id: "content-creation",
-                    label: "Content Creation",
-                    description: "Digital content and media production",
-                    children: [
-                        { id: "video", label: "Video", description: "Film, streaming, video production" },
-                        { id: "podcasting", label: "Podcasting", description: "Audio content, broadcasting" },
-                        { id: "blogging", label: "Blogging", description: "Written online content" },
-                        { id: "social-media", label: "Social Media", description: "Platform-specific content creation" }
-                    ]
-                },
-                {
-                    id: "design-fields",
-                    label: "Design Fields",
-                    description: "Visual and functional design work",
-                    children: [
-                        { id: "ux-ui-design", label: "UX/UI Design", description: "User experience, interface design" },
-                        { id: "graphic-design", label: "Graphic Design", description: "Visual communication, branding" },
-                        { id: "industrial-design", label: "Industrial Design", description: "Product design, manufacturing" }
-                    ]
-                },
-                {
-                    id: "other",
-                    label: "Other",
-                    description: "Creative work not listed above",
-                    children: []
-                }
-            ]
-
-            console.log('✅ Creator types loaded:', creatorTypes.length, 'categories')
-
-            // EMERGENCY FIX: Simple, guaranteed-to-work HTML generation
-            console.log('🔧 Generating HTML for', creatorTypes.length, 'categories')
-
-            let html = ''
-
-            for (let i = 0; i < creatorTypes.length; i++) {
-                const category = creatorTypes[i]
+            
+            container.innerHTML = creatorTypes.map(category => {
                 const categorySelected = selectedCreatorTypes.includes(category.id)
-
-                console.log(`Processing category: ${category.label}`)
-
-                html += '<div class="creator-category">'
-                html += `<div class="category-header ${categorySelected ? 'selected' : ''}" onclick="toggleCreatorType('${category.id}')">`
-                html += '<div>'
-                html += `<div class="category-title">${category.label}</div>`
-                html += `<div class="category-description">${category.description}</div>`
-                html += '</div>'
-                html += `<div class="category-check ${categorySelected ? 'selected' : ''}">`
-                html += categorySelected ? '✓' : ''
-                html += '</div>'
-                html += '</div>'
-
-                if (category.id === 'other') {
-                    html += '<div class="subcategories">'
-                    html += `<input type="text" id="otherCreatorTypeInput" placeholder="e.g., Pottery, Stand-up Comedy, Fashion Design..." value="${otherValue || ''}" onkeyup="handleOtherInput(this.value)" onclick="handleOtherInputClick(event)" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">`
-                    html += '</div>'
-                } else if (category.children && category.children.length > 0) {
-                    html += '<div class="subcategories">'
-                    for (let j = 0; j < category.children.length; j++) {
-                        const child = category.children[j]
-                        const childSelected = selectedCreatorTypes.includes(child.id)
-                        html += `<div class="subcategory-card ${childSelected ? 'selected' : ''}" onclick="event.stopPropagation(); toggleCreatorType('${child.id}');">`
-                        html += `<div class="subcategory-title">${child.label}</div>`
-                        html += `<div class="subcategory-description">${child.description}</div>`
-                        html += '</div>'
-                    }
-                    html += '</div>'
-                }
-
-                html += '</div>'
-            }
-
-            console.log('✅ HTML generated, length:', html.length)
-            container.innerHTML = html
-            console.log('✅ Container updated successfully')
+                const hasSelectedChildren = category.children && category.children.some(child => 
+                    selectedCreatorTypes.includes(child.id)
+                )
+                
+                console.log(`Category: ${category.label}, has children: ${!!category.children}, children count: ${category.children ? category.children.length : 0}`)
+                
+                return `
+                    <div class="creator-category">
+                        <div class="category-header ${categorySelected ? 'selected' : ''}" 
+                             onclick="toggleCreatorType('${category.id}')">
+                            <div>
+                                <div class="category-title">${category.label}</div>
+                                <div class="category-description">${category.description}</div>
+                            </div>
+                            <div class="category-check ${categorySelected ? 'selected' : ''}">
+                                ${categorySelected ? '✓' : ''}
+                            </div>
+                        </div>
+                        ${category.id === 'other' ? `
+                            <div class="subcategories">
+                                <input type="text" 
+                                       id="otherCreatorTypeInput" 
+                                       placeholder="e.g., Pottery, Stand-up Comedy, Fashion Design..."
+                                       value="${otherValue || ''}"
+                                       onkeyup="handleOtherInput(this.value)"
+                                       onclick="handleOtherInputClick(event)"
+                                       style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
+                            </div>
+                        ` : category.children && category.children.length > 0 ? `
+                            <div class="subcategories">
+                                ${category.children.map(child => {
+                                    const childSelected = selectedCreatorTypes.includes(child.id)
+                                    console.log(`  Child: ${child.label}, selected: ${childSelected}`)
+                                    return `
+                                        <div class="subcategory-card ${childSelected ? 'selected' : ''}"
+                                             onclick="event.stopPropagation(); toggleCreatorType('${child.id}');">
+                                            <div class="subcategory-title">${child.label}</div>
+                                            <div class="subcategory-description">${child.description}</div>
+                                        </div>
+                                    `
+                                }).join('')}
+                            </div>
+                        ` : category.children ? `
+                            <div class="subcategories">
+                                <p style="padding: 16px; color: #6b7280; font-style: italic;">No subcategories available</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `
+            }).join('')
+            
+            console.log('Modal HTML generated, container updated')
         }
 
         function toggleCreatorType(typeId) {

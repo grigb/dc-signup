@@ -1357,6 +1357,9 @@
                     creatorTypes = data.creatorTypes
                     console.log('✅ Creator types loaded from database:', data.version)
                     console.log('Found', creatorTypes.length, 'creator type categories')
+
+                    // Auto-render if modal already open or will open soon
+                    loadCreatorTypesIntoModal()
                 } else {
                     console.warn('No creator types data received, falling back to file')
                     return loadCreatorTypesFromFile()
@@ -1374,6 +1377,8 @@
                 const data = await response.json()
                 creatorTypes = data.creatorTypes
                 console.log('📄 Creator types loaded from local file:', data.version)
+                // Ensure UI updates when loading from file
+                loadCreatorTypesIntoModal()
             } catch (error) {
                 console.error('Failed to load creator types from file:', error)
                 // Final fallback to hardcoded list with hierarchy
@@ -2543,7 +2548,12 @@
             }
             modal.style.display = 'flex'
             console.log('Modal opened, loading creator types...')
-            loadCreatorTypesIntoModal()
+            if (creatorTypes.length === 0) {
+                // If data not yet loaded, fetch it first then populate
+                loadCreatorTypes().then(() => loadCreatorTypesIntoModal())
+            } else {
+                loadCreatorTypesIntoModal()
+            }
         }
 
         function closeCreatorTypeModal() {

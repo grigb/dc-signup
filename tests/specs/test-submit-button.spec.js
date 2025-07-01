@@ -5,12 +5,7 @@ test('Debug submit button functionality', async ({ page }) => {
   page.on('console', msg => console.log('PAGE LOG:', msg.text()));
   page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
 
-  // Start local server
-  const fs = require('fs');
-  const http = require('http');
-  const path = require('path');
-  
-  const server = http.createServer((req, res) => {
+  // No need for custom HTTP server; Playwright webServer provided in config.
     let filePath = '.' + req.url;
     if (filePath === './') filePath = './index.html';
     
@@ -40,13 +35,11 @@ test('Debug submit button functionality', async ({ page }) => {
     });
   });
   
-  await new Promise((resolve) => {
-    server.listen(8081, resolve);
-  });
+
 
   try {
-    // Navigate to the page
-    await page.goto('http://localhost:8081/index.html');
+    // Navigate using Playwright baseURL
+    await page.goto('/');
     
     // Wait for page to load
     await page.waitForLoadState('networkidle');
@@ -121,7 +114,5 @@ test('Debug submit button functionality', async ({ page }) => {
     const confirmationVisible = await page.locator('#confirmationStep').isVisible();
     console.log('Confirmation step visible:', confirmationVisible);
     
-  } finally {
-    server.close();
-  }
+  // nothing to close
 });

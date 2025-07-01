@@ -24,9 +24,8 @@ test.describe('DC Signup Form Testing', () => {
             errors.push(error.message);
         });
 
-        // Navigate to the form
-        const formPath = path.join(__dirname, 'index.html');
-        await page.goto(`file://${formPath}`);
+        // Navigate to the form using baseURL provided by Playwright config
+        await page.goto('/');
     });
 
     test('Load form and capture initial errors', async () => {

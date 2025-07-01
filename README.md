@@ -10,6 +10,20 @@ An offline-first, progressive signup system for the Distributed Creatives networ
 3. Tap "Join Now" to save locally
 4. Tap "View Stored Data" to see saved entries
 
+### Production Build & Deploy
+
+```bash
+npm install
+npm run build            # outputs dist/
+python3 -m http.server 8000 -d dist   # optional local preview
+```
+
+Deploy to Cloudflare Pages:
+1. Set build command to `npm run build` (or leave blank).
+2. Set output directory to `dist`.
+
+For full handoff details see `docs/handovers/2025-07-01-consolidation-handoff.md`.
+
 ### Mobile Testing
 ```bash
 # Serve locally to test on mobile device

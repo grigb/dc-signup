@@ -1542,6 +1542,12 @@
 
         // Creator Type Selector Logic
         function renderCreatorTypes() {
+            // Add null check for creatorTypeList
+            if (!creatorTypeList) {
+                console.warn('creatorTypeList element not found')
+                return
+            }
+            
             if (!creatorTypes || creatorTypes.length === 0) {
                 creatorTypeList.innerHTML = '<div style="padding: 16px; text-align: center; color: #64748b;">Loading creator types...</div>'
                 return
@@ -1613,16 +1619,28 @@
 
         function updateCreatorTypeHeader() {
             const count = selectedCreatorTypes.length + (otherValue ? 1 : 0)
-            selectionCount.textContent = `${count} selected`
             
-            if (navigationPath.length === 0) {
-                currentCategoryLabel.textContent = 'Choose your creator types'
-            } else {
-                currentCategoryLabel.textContent = navigationPath[navigationPath.length - 1].label
+            // Add null check for selectionCount
+            if (selectionCount) {
+                selectionCount.textContent = `${count} selected`
+            }
+            
+            // Add null check for currentCategoryLabel
+            if (currentCategoryLabel) {
+                if (navigationPath.length === 0) {
+                    currentCategoryLabel.textContent = 'Choose your creator types'
+                } else {
+                    currentCategoryLabel.textContent = navigationPath[navigationPath.length - 1].label
+                }
             }
         }
 
         function updateNavigationVisibility() {
+            // Add null checks for navigation elements
+            if (!creatorTypeNav || !navPath) {
+                return
+            }
+            
             if (navigationPath.length > 0) {
                 creatorTypeNav.classList.add('visible')
                 navPath.textContent = navigationPath.map(item => item.label).join(' › ')
@@ -1632,6 +1650,11 @@
         }
 
         function updateSelectedTypes() {
+            // Add null check for selectedTypesContainer
+            if (!selectedTypesContainer) {
+                return
+            }
+            
             selectedTypesContainer.innerHTML = ''
             
             selectedCreatorTypes.forEach(typeId => {
@@ -2750,31 +2773,41 @@
             const container = document.getElementById('selectedTypes')
             
             const totalCount = selectedCreatorTypes.length + (otherValue ? 1 : 0)
-            count.textContent = `${totalCount} selected`
             
-            if (totalCount > 0) {
-                display.textContent = 'Creator types selected'
-            } else {
-                display.textContent = 'Click to select your creator types'
+            // Add null check for count
+            if (count) {
+                count.textContent = `${totalCount} selected`
             }
             
-            // Show selected types as tags
-            container.innerHTML = ''
-            selectedCreatorTypes.forEach(typeId => {
-                const type = findCreatorTypeById(typeId)
-                if (type) {
+            // Add null check for display
+            if (display) {
+                if (totalCount > 0) {
+                    display.textContent = 'Creator types selected'
+                } else {
+                    display.textContent = 'Click to select your creator types'
+                }
+            }
+            
+            // Add null check for container
+            if (container) {
+                // Show selected types as tags
+                container.innerHTML = ''
+                selectedCreatorTypes.forEach(typeId => {
+                    const type = findCreatorTypeById(typeId)
+                    if (type) {
+                        const tag = document.createElement('div')
+                        tag.className = 'selected-type-tag'
+                        tag.innerHTML = `${type.label} <button type="button" class="remove-type" onclick="removeCreatorType('${typeId}')">×</button>`
+                        container.appendChild(tag)
+                    }
+                })
+                
+                if (otherValue) {
                     const tag = document.createElement('div')
                     tag.className = 'selected-type-tag'
-                    tag.innerHTML = `${type.label} <button type="button" class="remove-type" onclick="removeCreatorType('${typeId}')">×</button>`
+                    tag.innerHTML = `Other: ${otherValue} <button type="button" class="remove-type" onclick="removeOtherType()">×</button>`
                     container.appendChild(tag)
                 }
-            })
-            
-            if (otherValue) {
-                const tag = document.createElement('div')
-                tag.className = 'selected-type-tag'
-                tag.innerHTML = `Other: ${otherValue} <button type="button" class="remove-type" onclick="removeOtherType()">×</button>`
-                container.appendChild(tag)
             }
         }
 

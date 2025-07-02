@@ -1876,6 +1876,8 @@
 
         // Actual submission function called after confirmation
         async function submitConfirmedData(submission) {
+            console.log('[TRACE] submitConfirmedData called with:', submission)
+            
             // Always save locally first
             saveToLocal(submission)
             
@@ -1895,24 +1897,29 @@
                 showSuccess('Saved locally. Will sync when online.')
             }
             
+            console.log('[TRACE] About to reset form and call showFormStep')
             // Only reset form after successful final submission
             form.reset()
             resetForm()
             currentSubmission = null
             showFormStep()
+            console.log('[TRACE] Form reset complete')
         }
 
         function resetForm() {
+            console.log('[TRACE] resetForm called')
             selectedCreatorTypes = []
             otherValue = ""
             navigationPath = []
             currentLevel = creatorTypes
             if (otherInput) otherInput.classList.remove('visible')
             if (memberShowcase) memberShowcase.classList.remove('visible')
+            console.log('[TRACE] About to call renderCreatorTypes and updateSelectedTypes')
             renderCreatorTypes()
             updateSelectedTypes()
             if (bioCharCount) bioCharCount.textContent = '0/300 characters'
             if (quoteCharCount) quoteCharCount.textContent = '0/500 characters'
+            console.log('[TRACE] resetForm complete')
         }
 
         // Database operations
@@ -2123,12 +2130,14 @@
 
         // Step Navigation Functions
         function showFormStep() {
+            console.log('[TRACE] showFormStep called')
             // More aggressive hiding of confirmation step
             const confirmationStep = document.getElementById('confirmationStep')
             if (confirmationStep) {
                 confirmationStep.style.display = 'none'
                 confirmationStep.style.visibility = 'hidden'
                 confirmationStep.style.zIndex = '-1'
+                console.log('[TRACE] Confirmation step hidden')
             }
             
             // Hide offline viewer as well
@@ -2594,61 +2603,62 @@
 
             console.log('✅ Container found:', container)
 
-            // EMERGENCY FIX: Always use hardcoded data for immediate deployment
-            creatorTypes = [
-                {
-                    id: "traditional-arts",
-                    label: "Traditional Arts",
-                    description: "Classic artistic mediums and forms",
-                    children: [
-                        { id: "visual-arts", label: "Visual Arts", description: "Painting, drawing, sculpture" },
-                        { id: "music", label: "Music", description: "Composition, performance, production" },
-                        { id: "writing", label: "Writing", description: "Fiction, non-fiction, poetry" },
-                        { id: "photography", label: "Photography", description: "Digital and film photography" },
-                        { id: "performance-acting", label: "Performance/Acting", description: "Theater, film, live performance" }
-                    ]
-                },
-                {
-                    id: "technical-creation",
-                    label: "Technical Creation",
-                    description: "Technology-focused creative work",
-                    children: [
-                        { id: "software-development", label: "Software Development", description: "Applications, systems, tools" },
-                        { id: "game-development", label: "Game Development", description: "Video games, interactive media" },
-                        { id: "web-development", label: "Web Development", description: "Websites, web applications" },
-                        { id: "engineering", label: "Engineering", description: "Hardware, systems, innovation" },
-                        { id: "data-science", label: "Data Science", description: "Analytics, visualization, AI/ML" }
-                    ]
-                },
-                {
-                    id: "content-creation",
-                    label: "Content Creation",
-                    description: "Digital content and media production",
-                    children: [
-                        { id: "video", label: "Video", description: "Film, streaming, video production" },
-                        { id: "podcasting", label: "Podcasting", description: "Audio content, broadcasting" },
-                        { id: "blogging", label: "Blogging", description: "Written online content" },
-                        { id: "social-media", label: "Social Media", description: "Platform-specific content creation" }
-                    ]
-                },
-                {
-                    id: "design-fields",
-                    label: "Design Fields",
-                    description: "Visual and functional design work",
-                    children: [
-                        { id: "ux-ui-design", label: "UX/UI Design", description: "User experience, interface design" },
-                        { id: "graphic-design", label: "Graphic Design", description: "Visual communication, branding" },
-                        { id: "industrial-design", label: "Industrial Design", description: "Product design, manufacturing" }
-                    ]
-                },
-                {
-                    id: "other",
-                    label: "Other",
-                    description: "Creative work not listed above",
-                    children: []
-                }
-            ]
-
+            // EMERGENCY FIX: Hard-coded fallback – only if no data is loaded
+            if (!creatorTypes || creatorTypes.length === 0) {
+                creatorTypes = [
+                    {
+                        id: "traditional-arts",
+                        label: "Traditional Arts",
+                        description: "Classic artistic mediums and forms",
+                        children: [
+                            { id: "visual-arts", label: "Visual Arts", description: "Painting, drawing, sculpture" },
+                            { id: "music", label: "Music", description: "Composition, performance, production" },
+                            { id: "writing", label: "Writing", description: "Fiction, non-fiction, poetry" },
+                            { id: "photography", label: "Photography", description: "Digital and film photography" },
+                            { id: "performance-acting", label: "Performance/Acting", description: "Theater, film, live performance" }
+                        ]
+                    },
+                    {
+                        id: "technical-creation",
+                        label: "Technical Creation",
+                        description: "Technology-focused creative work",
+                        children: [
+                            { id: "software-development", label: "Software Development", description: "Applications, systems, tools" },
+                            { id: "game-development", label: "Game Development", description: "Video games, interactive media" },
+                            { id: "web-development", label: "Web Development", description: "Websites, web applications" },
+                            { id: "engineering", label: "Engineering", description: "Hardware, systems, innovation" },
+                            { id: "data-science", label: "Data Science", description: "Analytics, visualization, AI/ML" }
+                        ]
+                    },
+                    {
+                        id: "content-creation",
+                        label: "Content Creation",
+                        description: "Digital content and media production",
+                        children: [
+                            { id: "video", label: "Video", description: "Film, streaming, video production" },
+                            { id: "podcasting", label: "Podcasting", description: "Audio content, broadcasting" },
+                            { id: "blogging", label: "Blogging", description: "Written online content" },
+                            { id: "social-media", label: "Social Media", description: "Platform-specific content creation" }
+                        ]
+                    },
+                    {
+                        id: "design-fields",
+                        label: "Design Fields",
+                        description: "Visual and functional design work",
+                        children: [
+                            { id: "ux-ui-design", label: "UX/UI Design", description: "User experience, interface design" },
+                            { id: "graphic-design", label: "Graphic Design", description: "Visual communication, branding" },
+                            { id: "industrial-design", label: "Industrial Design", description: "Product design, manufacturing" }
+                        ]
+                    },
+                    {
+                        id: "other",
+                        label: "Other",
+                        description: "Creative work not listed above",
+                        children: []
+                    }
+                ]
+            } // end fallback guard
             console.log('✅ Creator types loaded:', creatorTypes.length, 'categories')
 
             // EMERGENCY FIX: Simple, guaranteed-to-work HTML generation
@@ -2768,9 +2778,16 @@
         }
 
         function updateSelectedTypesDisplay() {
+            console.log('[TRACE] updateSelectedTypesDisplay called')
             const display = document.getElementById('creatorTypeDisplay')
             const count = document.getElementById('selectionCount')
             const container = document.getElementById('selectedTypes')
+            
+            console.log('[TRACE] Elements found:', {
+                display: display ? 'YES' : 'NO',
+                count: count ? 'YES' : 'NO',
+                container: container ? 'YES' : 'NO'
+            })
             
             const totalCount = selectedCreatorTypes.length + (otherValue ? 1 : 0)
             

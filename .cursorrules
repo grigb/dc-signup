@@ -1,0 +1,161 @@
+# DC Signup System - Cursor Rules
+
+## Project Context
+A member signup system with PWA/offline support that needs deployment TODAY. The project has grown but must ship with current features working properly.
+
+## Actual Tech Stack & Structure
+```
+/
+├── src/                 # Frontend files (HTML, JS, assets)
+│   ├── index.html      # Main signup form
+│   ├── admin.html      # Admin dashboard
+│   ├── member.html     # Member profile/badge
+│   ├── verify.html     # Email verification
+│   └── sw.js           # Service worker
+├── database/           # SQL schemas and migrations
+├── supabase/          # Edge functions
+├── tests/             # Existing Playwright tests
+├── docs/              # Documentation (MAINTAIN THIS!)
+└── build.sh           # Deployment script
+```
+
+## Critical Tasks Before Deployment
+1. ✅ Basic functionality works (signup, verify, admin)
+2. ⚠️ Add offline member cache for admin (IndexedDB)
+3. ⚠️ Add bulk select/delete with confirmation
+4. ⚠️ Enforce server-side security for deletes
+5. ⚠️ Document environment variables
+6. ⚠️ Add basic admin delete test
+
+## Core Principles
+1. **SHIP TODAY** - Focus only on deployment blockers
+2. **Document changes** - Update docs/ as you work
+3. **Preserve working code** - Don't refactor what works
+4. **Simple fixes only** - Minimal code to solve problems
+5. **Track your work** - Log changes for handover
+
+## Code Guidelines
+
+### JavaScript Conventions (Match Existing)
+- Embed JS in HTML files (no separate app.js needed)
+- Use Supabase CDN: `window.supabase.createClient()`
+- camelCase for variables/functions
+- async/await for all Supabase calls
+- Simple try/catch with user alerts for errors
+
+### File Naming (Match Existing)
+- HTML/JS files: kebab-case (admin.html, verify.html)
+- SQL: snake_case columns, PascalCase policies
+- Tables: plural (members, creator_types)
+
+### Supabase Patterns
+```javascript
+// Client init (already in files)
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// For admin deletes (needs service role)
+// TODO: Move to secure endpoint or edge function
+```
+
+### Quick Fixes for Deployment
+
+#### 1. Offline Admin Cache (Priority)
+```javascript
+// Add to admin.html
+const CACHE_NAME = 'admin-members-v1';
+// Simple IndexedDB wrapper for member list
+// Cache on fetch, show cached when offline
+```
+
+#### 2. Bulk Operations
+```javascript
+// Add checkboxes to member rows
+// Single confirmation modal for bulk delete
+// Keep it simple - no fancy state management
+```
+
+#### 3. Environment Documentation
+Create `docs/DEPLOYMENT.md` with:
+- Required env vars
+- Setup steps
+- Common issues
+
+## Documentation Requirements
+
+### When changing ANY file:
+1. Add entry to `docs/CHANGELOG.md`:
+   ```markdown
+   ## [Date] - Your Name
+   ### Changed
+   - Modified admin.html: Added bulk delete functionality
+   - Fixed: [issue description]
+   ```
+
+2. Update relevant docs:
+   - `docs/handover.md` - for major changes
+   - `docs/deployment.md` - for env/setup changes
+   - `docs/known-issues.md` - for bugs found
+
+### Documentation Template
+```markdown
+## Feature/Fix: [Name]
+**Date**: [Today]
+**Files Modified**: [List files]
+**Why**: [Brief reason]
+**What Changed**: [Bullet points]
+**Testing**: [How you tested]
+**Notes**: [Any gotchas]
+```
+
+## What NOT to Do
+- Don't create new test frameworks
+- Don't refactor working features
+- Don't add build complexity
+- Don't redesign the UI
+- Don't add TypeScript to frontend
+- Don't create new abstractions
+- Don't optimize performance
+
+## Deployment Checklist
+Before pushing:
+- [ ] Offline admin cache working
+- [ ] Bulk delete functional
+- [ ] Service role key secured
+- [ ] Environment vars documented
+- [ ] One admin test passes
+- [ ] Docs updated with changes
+- [ ] No console errors
+- [ ] Works on mobile
+
+## Quick Testing Commands
+```bash
+# Local server
+python -m http.server 8000 -d src/
+
+# Check Supabase
+node src/apply-schemas.js
+
+# Run specific test
+npx playwright test tests/admin-delete.spec.js
+```
+
+## Common Gotchas
+- Admin uses embedded JS, not separate files
+- Service worker is in src/, not root
+- Supabase client from CDN, not npm
+- Creator types stored as JSONB
+- Use existing patterns, don't invent new ones
+
+## Priority Order (Today)
+1. Get offline admin working (IndexedDB)
+2. Add bulk delete with modal
+3. Document env vars
+4. Secure the delete endpoint
+5. Ship it
+
+## Remember
+- Every change needs a docs entry
+- Test manually - it's faster
+- Use existing code patterns
+- If it works, don't touch it
+- Documentation prevents future pain 

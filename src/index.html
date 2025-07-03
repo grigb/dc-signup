@@ -1210,7 +1210,7 @@
                         <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;" onclick="handleEditDetails()">
                             ← Edit Details
                         </button>
-                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;" onclick="handleJoinCommunity()">
+                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;" onclick="console.log('onclick fired'); handleJoinCommunity()">
                             Join the Community
                         </button>
                     </div>
@@ -1278,6 +1278,7 @@
     </div>
 
     <script>
+        console.log('[SCRIPT START] DC Signup System script is starting...');
         // Configuration - Use environment variables in production
         // Environment variables - replaced by Cloudflare Pages build process
         const SUPABASE_URL = 'https://jgnyutkpxapaghderjmj.supabase.co'
@@ -1880,6 +1881,7 @@
         // Actual submission function called after confirmation
         async function submitConfirmedData(submission) {
             console.log('[TRACE] submitConfirmedData called with:', submission)
+            console.trace('Call stack for submitConfirmedData:')
             
             // Always save locally first
             saveToLocal(submission)
@@ -1903,6 +1905,13 @@
             console.log('[TRACE] About to reset form and call showFormStep')
             // Only reset form after successful final submission
             currentSubmission = null
+            
+            // Force hide the confirmation step and show the form
+            const confirmationStep = document.getElementById('confirmationStep')
+            if (confirmationStep) {
+                confirmationStep.style.display = 'none'
+            }
+            
             showFormStep() // Show form page first before resetting
             form.reset()
             resetForm()
@@ -2140,6 +2149,7 @@
                 confirmationStep.style.display = 'none'
                 confirmationStep.style.visibility = 'hidden'
                 confirmationStep.style.zIndex = '-1'
+                confirmationStep.classList.remove('visible')
                 console.log('[TRACE] Confirmation step hidden')
             }
             
@@ -2155,10 +2165,13 @@
             const formElement = document.getElementById('signupForm')
             if (formElement) {
                 formElement.style.display = 'block'
+                formElement.style.visibility = 'visible'
                 // Get the parent scrollable-content that contains the form
                 const scrollableContent = formElement.parentElement
                 if (scrollableContent && scrollableContent.classList.contains('scrollable-content')) {
                     scrollableContent.style.display = 'block'
+                    scrollableContent.style.visibility = 'visible'
+                    console.log('[TRACE] Form and scrollable content shown')
                 }
             }
             
@@ -2504,7 +2517,7 @@
         }
 
         // Global function for Join the Community button
-        async function handleJoinCommunity() {
+        window.handleJoinCommunity = async function() {
             console.log('[DEBUG] handleJoinCommunity called, currentSubmission:', currentSubmission)
             if (currentSubmission) {
                 console.log('[DEBUG] Calling submitConfirmedData...')
@@ -2517,6 +2530,7 @@
         }
 
         // Setup event listeners for buttons
+        console.log('[SCRIPT PROGRESS] About to define setupButtonListeners function');
         function setupButtonListeners() {
             console.log('[DEBUG] Setting up button listeners')
             // Confirmation step buttons - add null checks since they're in hidden elements
@@ -2527,12 +2541,13 @@
             if (confirmSubmitBtn) {
                 console.log('[DEBUG] Adding click listener to confirmSubmitBtn')
                 confirmSubmitBtn.addEventListener('click', async function() {
-                    console.log('[DEBUG] Join the Community clicked, currentSubmission:', currentSubmission)
+                    console.log('[DEBUG] Join the Community clicked via addEventListener, currentSubmission:', currentSubmission)
                     if (currentSubmission) {
                         await submitConfirmedData(currentSubmission)
                         currentSubmission = null
                     } else {
                         console.log('[DEBUG] currentSubmission is null, cannot proceed')
+                        showError('No submission data found. Please fill out the form again.')
                     }
                 })
             } else {
@@ -2541,12 +2556,16 @@
         }
 
         // Event Listeners for new UI elements
+        console.log('[DEBUG] Setting up event listeners, readyState:', document.readyState)
         if (document.readyState === 'loading') {
+            console.log('[DEBUG] Document still loading, waiting for DOMContentLoaded')
             document.addEventListener('DOMContentLoaded', function() {
+                console.log('[DEBUG] DOMContentLoaded fired, calling setupButtonListeners')
                 setupButtonListeners()
             });
         } else {
             // DOM is already loaded, call setup immediately
+            console.log('[DEBUG] DOM already loaded, calling setupButtonListeners immediately')
             setupButtonListeners()
         }
 
@@ -2981,6 +3000,8 @@
             }, 2000); // Check every 2 seconds
             console.log('Auto-reload enabled (dev mode)');
         }
+        
+        console.log('[SCRIPT END] DC Signup System script has finished loading');
     </script>
 </body>
 </html>

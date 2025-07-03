@@ -604,8 +604,8 @@
     <script>
         // Configuration - Use environment variables in production
         // SECURITY: Previous JWT key was exposed and invalidated
-        const SUPABASE_URL = window.SUPABASE_URL || 'https://jgnyutkpxapaghderjmj.supabase.co'
-        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'REPLACE_WITH_NEW_SECURE_KEY'
+        const SUPABASE_URL = window.SUPABASE_URL || '__SUPABASE_URL__'
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '__SUPABASE_ANON_KEY__'
         
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -640,6 +640,88 @@
         let filteredMembers = []
         let pendingAction = null
         let creatorTypesData = null
+        
+        // --- IndexedDB Offline Cache for Members ---
+        const ADMIN_CACHE_DB = 'admin-members-cache-v1';
+        const ADMIN_CACHE_STORE = 'members';
+        let isOfflineMode = false;
+
+        function openIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(ADMIN_CACHE_DB, 1);
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(ADMIN_CACHE_STORE)) {
+                        db.createObjectStore(ADMIN_CACHE_STORE, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = function(event) {
+                    resolve(event.target.result);
+                };
+                request.onerror = function(event) {
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        async function cacheMembersToIndexedDB(members) {
+            try {
+                const db = await openIndexedDB();
+                const tx = db.transaction(ADMIN_CACHE_STORE, 'readwrite');
+                const store = tx.objectStore(ADMIN_CACHE_STORE);
+                await new Promise((res, rej) => {
+                    const clearReq = store.clear();
+                    clearReq.onsuccess = res;
+                    clearReq.onerror = rej;
+                });
+                for (const member of members) {
+                    store.put(member);
+                }
+                tx.oncomplete = () => db.close();
+            } catch (e) {
+                console.warn('Failed to cache members:', e);
+            }
+        }
+
+        async function getMembersFromIndexedDB() {
+            try {
+                const db = await openIndexedDB();
+                const tx = db.transaction(ADMIN_CACHE_STORE, 'readonly');
+                const store = tx.objectStore(ADMIN_CACHE_STORE);
+                return await new Promise((resolve, reject) => {
+                    const req = store.getAll();
+                    req.onsuccess = () => {
+                        db.close();
+                        resolve(req.result);
+                    };
+                    req.onerror = () => {
+                        db.close();
+                        reject(req.error);
+                    };
+                });
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function showOfflineBanner(show) {
+            let banner = document.getElementById('offlineBanner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'offlineBanner';
+                banner.style.background = '#f59e0b';
+                banner.style.color = 'white';
+                banner.style.padding = '10px';
+                banner.style.textAlign = 'center';
+                banner.style.fontWeight = 'bold';
+                banner.textContent = 'Offline mode: showing cached members.';
+                document.body.insertBefore(banner, document.body.firstChild);
+            }
+            banner.style.display = show ? 'block' : 'none';
+        }
+
+        // --- Bulk Selection State ---
+        let selectedMemberIds = new Set();
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -736,38 +818,73 @@
         
         async function loadMembers() {
             try {
-                loadingMessage.classList.remove('hidden')
-                membersTable.classList.add('hidden')
-                errorMessage.classList.add('hidden')
-                
-                const { data, error } = await supabase
-                    .from('members')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                
-                if (error) {
-                    throw error
+                loadingMessage.classList.remove('hidden');
+                membersTable.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+                isOfflineMode = false;
+                let data = [];
+                let error = null;
+                try {
+                    const res = await supabase
+                        .from('members')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    data = res.data || [];
+                    error = res.error;
+                } catch (e) {
+                    error = e;
                 }
-                
-                members = data || []
-                renderMembers()
-                updateStatistics()
-                
-                loadingMessage.classList.add('hidden')
-                membersTable.classList.remove('hidden')
-                
+                if (error || !data.length) {
+                    // Try offline cache
+                    data = await getMembersFromIndexedDB();
+                    isOfflineMode = true;
+                } else {
+                    await cacheMembersToIndexedDB(data);
+                }
+                members = data;
+                renderMembers();
+                updateStatistics();
+                loadingMessage.classList.add('hidden');
+                membersTable.classList.remove('hidden');
+                showOfflineBanner(isOfflineMode);
             } catch (error) {
-                console.error('Error loading members:', error)
-                showError('Failed to load members: ' + error.message)
-                loadingMessage.classList.add('hidden')
+                console.error('Error loading members:', error);
+                showError('Failed to load members: ' + error.message);
+                loadingMessage.classList.add('hidden');
             }
         }
         
         function renderMembers() {
-            const filteredMembers = getFilteredMembers()
-            
+            const filteredMembers = getFilteredMembers();
+            // Bulk select header
+            let headerCheckbox = `<input type="checkbox" id="selectAllCheckbox" ${filteredMembers.length && filteredMembers.every(m => selectedMemberIds.has(m.id)) ? 'checked' : ''} />`;
+            membersTable.querySelector('thead tr').innerHTML = `
+                <th>${headerCheckbox}</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Creator Types</th>
+                <th>Country</th>
+                <th>Testimonial</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            `;
+            // Bulk delete button
+            let bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            if (!bulkDeleteBtn) {
+                bulkDeleteBtn = document.createElement('button');
+                bulkDeleteBtn.id = 'bulkDeleteBtn';
+                bulkDeleteBtn.className = 'btn btn-delete';
+                bulkDeleteBtn.textContent = 'Delete Selected';
+                bulkDeleteBtn.style.margin = '10px 0';
+                bulkDeleteBtn.onclick = showBulkDeleteConfirmation;
+                membersTable.parentNode.insertBefore(bulkDeleteBtn, membersTable);
+            }
+            bulkDeleteBtn.disabled = selectedMemberIds.size === 0;
+            // Table body
             membersTableBody.innerHTML = filteredMembers.map(member => `
                 <tr>
+                    <td><input type="checkbox" class="rowCheckbox" data-id="${member.id}" ${selectedMemberIds.has(member.id) ? 'checked' : ''}></td>
                     <td>${escapeHtml(member.name)}</td>
                     <td>${escapeHtml(member.email)}</td>
                     <td>
@@ -789,18 +906,32 @@
                     <td>${formatDate(member.created_at)}</td>
                     <td>
                         <div class="action-buttons">
-                            ${!member.email_verified ? 
-                                `<button class="btn btn-verify" onclick="verifyMember('${member.id}')">Verify</button>` : ''
-                            }
-                            ${member.archived ? 
-                                `<button class="btn btn-unarchive" onclick="unarchiveMember('${member.id}')">Restore</button>` :
-                                `<button class="btn btn-archive" onclick="archiveMember('${member.id}')">Archive</button>`
-                            }
                             <button class="btn btn-delete" onclick="showDeleteConfirmation('${member.id}', '${escapeHtml(member.name)}')">Delete</button>
                         </div>
                     </td>
                 </tr>
-            `).join('')
+            `).join('');
+            // Checkbox event listeners
+            setTimeout(() => {
+                document.getElementById('selectAllCheckbox').onclick = function() {
+                    if (this.checked) {
+                        filteredMembers.forEach(m => selectedMemberIds.add(m.id));
+                    } else {
+                        filteredMembers.forEach(m => selectedMemberIds.delete(m.id));
+                    }
+                    renderMembers();
+                };
+                document.querySelectorAll('.rowCheckbox').forEach(cb => {
+                    cb.onclick = function() {
+                        if (this.checked) {
+                            selectedMemberIds.add(this.dataset.id);
+                        } else {
+                            selectedMemberIds.delete(this.dataset.id);
+                        }
+                        renderMembers();
+                    };
+                });
+            }, 0);
         }
         
         function getFilteredMembers() {
@@ -1168,6 +1299,37 @@
             } catch (error) {
                 console.error('Failed to save creator types:', error)
                 alert('Failed to save creator types: ' + error.message)
+            }
+        }
+
+        function showBulkDeleteConfirmation() {
+            if (selectedMemberIds.size === 0) return;
+            showConfirmModal(
+                'Delete Selected Members',
+                `Are you sure you want to permanently delete ${selectedMemberIds.size} selected member(s)? This action cannot be undone.`,
+                () => deleteSelectedMembers()
+            );
+        }
+
+        async function deleteSelectedMembers() {
+            const ids = Array.from(selectedMemberIds);
+            for (const id of ids) {
+                await deleteMember(id, true);
+            }
+            selectedMemberIds.clear();
+            loadMembers();
+        }
+
+        async function deleteMember(memberId, silent) {
+            try {
+                const { error } = await supabase
+                    .from('members')
+                    .delete()
+                    .eq('id', memberId);
+                if (error) throw error;
+                if (!silent) loadMembers();
+            } catch (error) {
+                if (!silent) alert('Failed to delete member: ' + error.message);
             }
         }
     </script>

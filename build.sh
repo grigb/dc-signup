@@ -29,6 +29,12 @@ if [ ! -z "$SUPABASE_URL" ] && [ ! -z "$SUPABASE_ANON_KEY" ]; then
         sed -i '' "s|__SUPABASE_ANON_KEY__|$SUPABASE_ANON_KEY|g" dist/member.html
     fi
     
+    # Also process admin.html if it exists
+    if [ -f "dist/admin.html" ]; then
+        sed -i '' "s|__SUPABASE_URL__|$SUPABASE_URL|g" dist/admin.html
+        sed -i '' "s|__SUPABASE_ANON_KEY__|$SUPABASE_ANON_KEY|g" dist/admin.html
+    fi
+    
     echo "Environment variables injected successfully"
 else
     echo "WARNING: Environment variables not found. App will run in offline-only mode."

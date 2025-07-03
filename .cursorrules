@@ -1,3 +1,5 @@
+# MANDATE: The agent must work fully autonomously at all times, without requiring user intervention for any step that can be performed by the agent.
+
 # DC Signup System - Cursor Rules
 
 ## Project Context
@@ -95,6 +97,7 @@ Create `docs/DEPLOYMENT.md` with:
    - `docs/handover.md` - for major changes
    - `docs/deployment.md` - for env/setup changes
    - `docs/known-issues.md` - for bugs found
+   - `docs/ADMIN-TOOL-PLAN.md` - **MANDATORY:** All admin tool plans/strategies must be documented and updated as work progresses.
 
 ### Documentation Template
 ```markdown

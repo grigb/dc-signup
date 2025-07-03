@@ -1210,7 +1210,7 @@
                         <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;" onclick="handleEditDetails()">
                             ← Edit Details
                         </button>
-                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;">
+                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;" onclick="handleJoinCommunity()">
                             Join the Community
                         </button>
                     </div>
@@ -1902,10 +1902,10 @@
             
             console.log('[TRACE] About to reset form and call showFormStep')
             // Only reset form after successful final submission
+            currentSubmission = null
+            showFormStep() // Show form page first before resetting
             form.reset()
             resetForm()
-            currentSubmission = null
-            showFormStep()
             console.log('[TRACE] Form reset complete')
         }
 
@@ -2503,20 +2503,54 @@
             }
         }
 
-        // Event Listeners for new UI elements
-        document.addEventListener('DOMContentLoaded', function() {
+        // Global function for Join the Community button
+        async function handleJoinCommunity() {
+            console.log('[DEBUG] handleJoinCommunity called, currentSubmission:', currentSubmission)
+            if (currentSubmission) {
+                console.log('[DEBUG] Calling submitConfirmedData...')
+                await submitConfirmedData(currentSubmission)
+                console.log('[DEBUG] submitConfirmedData completed')
+            } else {
+                console.log('[DEBUG] currentSubmission is null, cannot proceed')
+                showError('No submission data found. Please fill out the form again.')
+            }
+        }
+
+        // Setup event listeners for buttons
+        function setupButtonListeners() {
+            console.log('[DEBUG] Setting up button listeners')
             // Confirmation step buttons - add null checks since they're in hidden elements
             // Edit button event listener removed - using onclick handler instead
 
             const confirmSubmitBtn = document.getElementById('confirmSubmitBtn')
+            console.log('[DEBUG] Looking for confirmSubmitBtn:', confirmSubmitBtn)
             if (confirmSubmitBtn) {
+                console.log('[DEBUG] Adding click listener to confirmSubmitBtn')
                 confirmSubmitBtn.addEventListener('click', async function() {
+                    console.log('[DEBUG] Join the Community clicked, currentSubmission:', currentSubmission)
                     if (currentSubmission) {
                         await submitConfirmedData(currentSubmission)
                         currentSubmission = null
+                    } else {
+                        console.log('[DEBUG] currentSubmission is null, cannot proceed')
                     }
                 })
+            } else {
+                console.log('[DEBUG] confirmSubmitBtn not found')
             }
+        }
+
+        // Event Listeners for new UI elements
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setupButtonListeners()
+            });
+        } else {
+            // DOM is already loaded, call setup immediately
+            setupButtonListeners()
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
 
             // View toggle buttons
             document.getElementById('formViewBtn').addEventListener('click', function() {

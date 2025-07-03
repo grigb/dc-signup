@@ -8,8 +8,8 @@ echo "Starting build process..."
 # Create build directory
 mkdir -p dist
 
-# Copy all files to build directory
-cp -r src/* dist/
+# Copy all files to build directory, excluding test and debug files
+rsync -av --exclude='test*.html' --exclude='test*.js' --exclude='debug*.html' --exclude='debug*.js' src/ dist/
 
 # Replace environment variable placeholders in the HTML file
 if [ ! -z "$SUPABASE_URL" ] && [ ! -z "$SUPABASE_ANON_KEY" ]; then

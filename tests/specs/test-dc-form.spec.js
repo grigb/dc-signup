@@ -252,7 +252,7 @@ test.describe('DC Signup Form Testing', () => {
 
         // Test offline mode simulation
         console.log('\n=== TESTING OFFLINE MODE ===');
-        await page.goto(`file://${path.join(__dirname, 'index.html')}?offline=true`);
+        await page.goto('/?offline=true');
         await page.waitForTimeout(2000);
 
         // Take screenshot in offline mode

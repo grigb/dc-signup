@@ -51,3 +51,13 @@ Ship a simple, robust admin tool for viewing and removing users, with offline su
 - All code is embedded in admin.html, minimal, and matches existing project patterns
 - No refactor or new abstractions introduced
 - Manual testing performed; further improvements should update this plan 
+
+## Feature/Fix: Robust Form Auto-Transition After Submission
+**Date**: 2025-07-03
+**Files Modified**: src/index.html
+**Why**: The form sometimes failed to return to the initial state after submission, leaving users stuck on the confirmation step. This was a critical UX and deployment blocker.
+**What Changed**:
+- Updated `submitConfirmedData` to robustly hide the confirmation step and show the form, ensuring all relevant style properties are set.
+- No new files or dependencies added.
+**Testing**: Manual submission and confirmation now always returns to the form view.
+**Notes**: Follows all CLAUDE.md and project documentation requirements. No impact on other flows. 

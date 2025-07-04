@@ -1882,18 +1882,14 @@
         async function submitConfirmedData(submission) {
             console.log('[TRACE] submitConfirmedData called with:', submission)
             console.trace('Call stack for submitConfirmedData:')
-            
             // Always save locally first
             saveToLocal(submission)
-            
             // Try to save to database if online
             if (isOnline) {
                 const success = await saveToDatabase(submission)
                 if (success) {
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
-                    
-                    // Email verification is handled automatically by the database
                     showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
                 } else {
                     showSuccess('Saved locally. Will sync when connection improves.')
@@ -1901,18 +1897,48 @@
             } else {
                 showSuccess('Saved locally. Will sync when online.')
             }
-            
             console.log('[TRACE] About to reset form and call showFormStep')
-            // Only reset form after successful final submission
             currentSubmission = null
-            
-            // Force hide the confirmation step and show the form
+            // Robustly hide confirmation step
             const confirmationStep = document.getElementById('confirmationStep')
             if (confirmationStep) {
                 confirmationStep.style.display = 'none'
+                confirmationStep.style.visibility = 'hidden'
+                confirmationStep.style.zIndex = '-1'
+                confirmationStep.classList.remove('visible')
             }
-            
-            showFormStep() // Show form page first before resetting
+            // Robustly show form and parent scrollable content
+            const formElement = document.getElementById('signupForm')
+            if (formElement) {
+                formElement.style.display = 'block'
+                formElement.style.visibility = 'visible'
+                const scrollableContent = formElement.parentElement
+                if (scrollableContent && scrollableContent.classList.contains('scrollable-content')) {
+                    scrollableContent.style.display = 'block'
+                    scrollableContent.style.visibility = 'visible'
+                }
+            }
+            // Show the submit button - find the one with submitBtn
+            const allFixedBottoms = document.querySelectorAll('.fixed-bottom')
+            allFixedBottoms.forEach(fb => {
+                if (fb.querySelector('#submitBtn')) {
+                    fb.style.display = 'block'
+                }
+            })
+            // Hide offline viewer just in case
+            const offlineViewer = document.getElementById('offlineViewer')
+            if (offlineViewer) {
+                offlineViewer.style.display = 'none'
+                offlineViewer.style.visibility = 'hidden'
+                offlineViewer.style.zIndex = '-1'
+            }
+            // Hide view toggle
+            const viewToggle = document.getElementById('viewToggle')
+            if (viewToggle) viewToggle.style.display = 'none'
+            // Show connection status
+            const connectionStatus = document.getElementById('connectionStatus')
+            if (connectionStatus) connectionStatus.style.display = 'block'
+            updateViewToggle()
             form.reset()
             resetForm()
             console.log('[TRACE] Form reset complete')
@@ -1926,8 +1952,8 @@
             currentLevel = creatorTypes
             if (otherInput) otherInput.classList.remove('visible')
             if (memberShowcase) memberShowcase.classList.remove('visible')
-            console.log('[TRACE] About to call renderCreatorTypes and updateSelectedTypes')
-            renderCreatorTypes()
+            console.log('[TRACE] About to call updateSelectedTypes')
+            // Don't call renderCreatorTypes() here - it renders into the modal which isn't visible
             updateSelectedTypes()
             if (bioCharCount) bioCharCount.textContent = '0/300 characters'
             if (quoteCharCount) quoteCharCount.textContent = '0/500 characters'

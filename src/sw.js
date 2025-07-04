@@ -1,7 +1,7 @@
 // Service Worker for DC Genesis Signup - Offline PWA functionality
 // This enables the site to work offline after first visit
 
-const CACHE_NAME = 'dc-genesis-v1'
+const CACHE_NAME = 'dc-genesis-v3-fixed'
 const STATIC_CACHE_URLS = [
   '/',
   '/index.html',
@@ -12,7 +12,7 @@ const STATIC_CACHE_URLS = [
 
 // Install service worker and cache resources
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...')
+  console.log('Service Worker: Installing new version...')
   
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -21,7 +21,8 @@ self.addEventListener('install', (event) => {
         return cache.addAll(STATIC_CACHE_URLS)
       })
       .then(() => {
-        console.log('Service Worker: Cache complete, skipping waiting')
+        console.log('Service Worker: Cache complete, force activating')
+        // Force the new service worker to activate immediately
         return self.skipWaiting()
       })
       .catch((error) => {
@@ -53,7 +54,7 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// Fetch strategy: Cache first, then network
+// Fetch strategy: Network first for HTML, cache first for other assets
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
@@ -65,6 +66,29 @@ self.addEventListener('fetch', (event) => {
     return
   }
   
+  // For HTML files, try network first to get latest updates
+  if (event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Cache successful responses
+          if (response.status === 200) {
+            const responseToCache = response.clone()
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache)
+            })
+          }
+          return response
+        })
+        .catch(() => {
+          // Fall back to cache if network fails
+          return caches.match(event.request)
+        })
+    )
+    return
+  }
+  
+  // For other assets, use cache first
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {

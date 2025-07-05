@@ -134,12 +134,25 @@ A member signup system with PWA/offline support for Distributed Creatives. This 
 # Install dependencies
 npm install
 
-# Start local server
+# Start local server (runs on port 4100)
 npm run dev
 
 # Run tests
 npm test
 ```
+
+### 🚨 DEVELOPMENT SERVER CONFIGURATION
+- **Port**: 4100 (ALWAYS use this port for local development)
+- **URL**: http://localhost:4100
+- **Server**: Python's built-in HTTP server (`python3 -m http.server 4100`)
+- **Directory**: Serves files from `src/` directory
+- **Command**: `npm run dev` (defined in package.json)
+
+**IMPORTANT FOR AI ASSISTANTS**: 
+- NEVER assume port 3000 or other common ports
+- ALWAYS check `package.json` scripts section first
+- Use `lsof -i :4100` to verify if server is already running
+- The dev server may already be running from previous sessions
 
 ### Deployment
 ```bash

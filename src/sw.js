@@ -1,7 +1,7 @@
 // Service Worker for DC Genesis Signup - Offline PWA functionality
 // This enables the site to work offline after first visit
 
-const CACHE_NAME = 'dc-genesis-v3-fixed'
+const CACHE_NAME = 'dc-genesis-v4-admin-fixed'
 const STATIC_CACHE_URLS = [
   '/',
   '/index.html',
@@ -63,6 +63,11 @@ self.addEventListener('fetch', (event) => {
   
   // Skip Supabase API requests (always try network)
   if (event.request.url.includes('supabase.co')) {
+    return
+  }
+  
+  // Skip caching for admin.html during development (always fetch fresh)
+  if (event.request.url.includes('admin.html')) {
     return
   }
   

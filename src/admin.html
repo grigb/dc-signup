@@ -10,6 +10,11 @@
     
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Set Supabase configuration for local development
+        window.SUPABASE_URL = 'https://jgnyutkpxapaghderjmj.supabase.co';
+        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyOTE5MTMsImV4cCI6MjA2Njg2NzkxM30.4GkS72fKX9trYQIfeXMmZJ2iM2menAjYdCHuHb3dOs8';
+    </script>
     
     <style>
         * {
@@ -291,7 +296,7 @@
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .export-section {
@@ -590,9 +595,12 @@
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmModal" class="modal-overlay hidden">
+    <div id="confirmModal" class="modal-overlay hidden" style="display: none;">
         <div class="modal-content">
-            <h3 class="modal-title" id="modalTitle">Confirm Action</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 class="modal-title" id="modalTitle">Confirm Action</h3>
+                <button id="modalCloseBtn" onclick="hideConfirmModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #666; padding: 4px 8px;">&times;</button>
+            </div>
             <p id="modalMessage">Are you sure you want to perform this action?</p>
             <div class="modal-buttons">
                 <button id="cancelBtn" class="btn btn-cancel">Cancel</button>
@@ -725,6 +733,7 @@
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            hideConfirmModal()
             checkAuthStatus()
             setupEventListeners()
         })
@@ -747,12 +756,45 @@
                     hideConfirmModal()
                 }
             })
+            
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    hideConfirmModal()
+                }
+            })
         }
         
         async function checkAuthStatus() {
             const { data: { session } } = await supabase.auth.getSession()
             if (session?.user) {
+                // Verify admin role for existing session
+                const { data: adminCheck, error: adminError } = await supabase.rpc('verify_admin_user', {
+                    user_email: session.user.email
+                })
+                
+                if (adminError) {
+                    console.error('Admin verification error:', adminError)
+                    await supabase.auth.signOut()
+                    showLoginSection()
+                    return
+                }
+                
+                if (!adminCheck) {
+                    console.warn('User session found but no admin privileges')
+                    await supabase.auth.signOut()
+                    showLoginSection()
+                    return
+                }
+                
+                // Get admin info
+                const { data: adminInfo, error: infoError } = await supabase.rpc('get_admin_user_info', {
+                    user_email: session.user.email
+                })
+                
                 currentUser = session.user
+                currentUser.adminInfo = adminInfo?.[0] || { role: 'admin', name: 'Admin User' }
+                
                 showAdminSection()
                 loadMembers()
                 loadCreatorTypes()
@@ -768,6 +810,7 @@
             const password = document.getElementById('password').value
             
             try {
+                // Step 1: Authenticate with Supabase
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
@@ -778,12 +821,56 @@
                     return
                 }
                 
+                // Step 2: Verify admin role
+                const { data: adminCheck, error: adminError } = await supabase.rpc('verify_admin_user', {
+                    user_email: email
+                })
+                
+                if (adminError) {
+                    console.error('Admin verification error:', adminError)
+                    showLoginError('Unable to verify admin access. Please contact support.')
+                    await supabase.auth.signOut()
+                    return
+                }
+                
+                if (!adminCheck) {
+                    showLoginError('Access denied. Admin privileges required.')
+                    await supabase.auth.signOut()
+                    return
+                }
+                
+                // Step 3: Get admin user info and update last login
+                const { data: adminInfo, error: infoError } = await supabase.rpc('get_admin_user_info', {
+                    user_email: email
+                })
+                
+                if (infoError) {
+                    console.error('Admin info error:', infoError)
+                    showLoginError('Unable to load admin information.')
+                    await supabase.auth.signOut()
+                    return
+                }
+                
+                // Step 4: Update last login timestamp
+                const { error: updateError } = await supabase.rpc('update_admin_last_login', {
+                    user_email: email
+                })
+                
+                if (updateError) {
+                    console.error('Login update error:', updateError)
+                    // Don't block login for this error, just log it
+                }
+                
+                // Step 5: Store admin info and proceed
                 currentUser = data.user
+                currentUser.adminInfo = adminInfo[0] || { role: 'admin', name: 'Admin User' }
+                
                 showAdminSection()
                 loadMembers()
                 loadCreatorTypes()
                 
             } catch (error) {
+                console.error('Login error:', error)
                 showLoginError('Login failed: ' + error.message)
             }
         }
@@ -805,7 +892,12 @@
             loginSection.classList.add('hidden')
             adminSection.classList.remove('hidden')
             logoutBtn.classList.remove('hidden')
-            userEmail.textContent = currentUser?.email || ''
+            
+            const adminInfo = currentUser?.adminInfo
+            const displayText = adminInfo?.name 
+                ? `${adminInfo.name} (${currentUser.email})` 
+                : currentUser?.email || ''
+            userEmail.textContent = displayText
         }
         
         function showLoginError(message) {
@@ -1003,11 +1095,17 @@
             modalTitle.textContent = title
             modalMessage.textContent = message
             pendingAction = action
-            confirmModal.classList.remove('hidden')
+            const modal = document.getElementById('confirmModal')
+            if (modal) {
+                modal.classList.remove('hidden')
+            }
         }
         
         function hideConfirmModal() {
-            confirmModal.classList.add('hidden')
+            const modal = document.getElementById('confirmModal')
+            if (modal) {
+                modal.classList.add('hidden')
+            }
             pendingAction = null
         }
         

@@ -22,8 +22,8 @@ test.describe('DC Signup Form HTTP Testing', () => {
             errors.push(error.message);
         });
 
-        // Navigate to the form via HTTP server
-        await page.goto('http://localhost:8080');
+        // Navigate to the form using Playwright baseURL
+        await page.goto('/');
     });
 
     test('Test complete form flow via HTTP server', async () => {

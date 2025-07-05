@@ -8,8 +8,8 @@ echo "Starting build process..."
 # Create build directory
 mkdir -p dist
 
-# Copy all files to build directory
-cp -r src/* dist/
+# Copy all files to build directory, excluding test and debug files
+rsync -av --exclude='test*.html' --exclude='test*.js' --exclude='debug*.html' --exclude='debug*.js' src/ dist/
 
 # Replace environment variable placeholders in the HTML file
 if [ ! -z "$SUPABASE_URL" ] && [ ! -z "$SUPABASE_ANON_KEY" ]; then
@@ -27,6 +27,12 @@ if [ ! -z "$SUPABASE_URL" ] && [ ! -z "$SUPABASE_ANON_KEY" ]; then
     if [ -f "dist/member.html" ]; then
         sed -i '' "s|__SUPABASE_URL__|$SUPABASE_URL|g" dist/member.html
         sed -i '' "s|__SUPABASE_ANON_KEY__|$SUPABASE_ANON_KEY|g" dist/member.html
+    fi
+    
+    # Also process admin.html if it exists
+    if [ -f "dist/admin.html" ]; then
+        sed -i '' "s|__SUPABASE_URL__|$SUPABASE_URL|g" dist/admin.html
+        sed -i '' "s|__SUPABASE_ANON_KEY__|$SUPABASE_ANON_KEY|g" dist/admin.html
     fi
     
     echo "Environment variables injected successfully"

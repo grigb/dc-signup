@@ -5,6 +5,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "cd src && python3 -m http.server 4100",
+    "build": "rm -rf dist && cp -R src dist",
     "test": "node tests/utils/test-supabase-setup.js"
   },
   "repository": {

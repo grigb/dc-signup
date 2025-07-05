@@ -1,6 +1,8 @@
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test');
 
+const wsEndpoint = process.env.PW_WS_ENDPOINT;
+
 module.exports = defineConfig({
   testDir: './',
   timeout: 30 * 1000,
@@ -14,9 +16,10 @@ module.exports = defineConfig({
   reporter: 'html',
   use: {
     actionTimeout: 0,
-    baseURL: 'http://localhost:4100',
+    baseURL: 'http://localhost:4173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    ...(wsEndpoint ? { connectOptions: { wsEndpoint } } : {})
   },
 
   projects: [
@@ -35,8 +38,8 @@ module.exports = defineConfig({
   ],
 
   webServer: {
-    command: 'python3 -m http.server 4100',
-    port: 4100,
+    command: 'python3 -m http.server 4173 -d dist',
+    port: 4173,
     reuseExistingServer: !process.env.CI,
   },
 });

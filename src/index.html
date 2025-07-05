@@ -1093,6 +1093,9 @@
                 </div>
             </div>
 
+            <!-- Hidden legacy input to maintain backward-compatibility for older JS functions -->
+            <input type="hidden" id="otherInput" value="">
+
             <div class="form-group">
                 <label for="country">Country</label>
                 <select id="country" name="country">
@@ -1207,7 +1210,7 @@
                         <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;" onclick="handleEditDetails()">
                             ← Edit Details
                         </button>
-                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;">
+                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;" onclick="console.log('onclick fired'); handleJoinCommunity()">
                             Join the Community
                         </button>
                     </div>
@@ -1275,10 +1278,11 @@
     </div>
 
     <script>
+        console.log('[SCRIPT START] DC Signup System script is starting...');
         // Configuration - Use environment variables in production
         // Environment variables - replaced by Cloudflare Pages build process
-        const SUPABASE_URL = '__SUPABASE_URL__'
-        const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__'
+        const SUPABASE_URL = 'https://jgnyutkpxapaghderjmj.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyOTE5MTMsImV4cCI6MjA2Njg2NzkxM30.4GkS72fKX9trYQIfeXMmZJ2iM2menAjYdCHuHb3dOs8'
         
         // Check if API keys are properly configured
         const hasValidApiKey = SUPABASE_ANON_KEY !== '__SUPABASE_' + 'ANON_KEY__' && SUPABASE_ANON_KEY.startsWith('eyJ')
@@ -1321,7 +1325,7 @@
         const connectionStatus = document.getElementById('connectionStatus')
         const successMessage = document.getElementById('successMessage')
         const errorMessage = document.getElementById('errorMessage')
-        const creatorTypeList = document.getElementById('creatorTypeList')
+        const creatorTypeList = document.getElementById('creatorTypeCategories')
         const selectedTypesContainer = document.getElementById('selectedTypes')
         const currentCategoryLabel = document.getElementById('currentCategoryLabel')
         const selectionCount = document.getElementById('selectionCount')
@@ -1357,6 +1361,9 @@
                     creatorTypes = data.creatorTypes
                     console.log('✅ Creator types loaded from database:', data.version)
                     console.log('Found', creatorTypes.length, 'creator type categories')
+
+                    // Auto-render if modal already open or will open soon
+                    loadCreatorTypesIntoModal()
                 } else {
                     console.warn('No creator types data received, falling back to file')
                     return loadCreatorTypesFromFile()
@@ -1374,6 +1381,8 @@
                 const data = await response.json()
                 creatorTypes = data.creatorTypes
                 console.log('📄 Creator types loaded from local file:', data.version)
+                // Ensure UI updates when loading from file
+                loadCreatorTypesIntoModal()
             } catch (error) {
                 console.error('Failed to load creator types from file:', error)
                 // Final fallback to hardcoded list with hierarchy
@@ -1537,6 +1546,12 @@
 
         // Creator Type Selector Logic
         function renderCreatorTypes() {
+            // Add null check for creatorTypeList
+            if (!creatorTypeList) {
+                console.warn('creatorTypeList element not found')
+                return
+            }
+            
             if (!creatorTypes || creatorTypes.length === 0) {
                 creatorTypeList.innerHTML = '<div style="padding: 16px; text-align: center; color: #64748b;">Loading creator types...</div>'
                 return
@@ -1608,16 +1623,28 @@
 
         function updateCreatorTypeHeader() {
             const count = selectedCreatorTypes.length + (otherValue ? 1 : 0)
-            selectionCount.textContent = `${count} selected`
             
-            if (navigationPath.length === 0) {
-                currentCategoryLabel.textContent = 'Choose your creator types'
-            } else {
-                currentCategoryLabel.textContent = navigationPath[navigationPath.length - 1].label
+            // Add null check for selectionCount
+            if (selectionCount) {
+                selectionCount.textContent = `${count} selected`
+            }
+            
+            // Add null check for currentCategoryLabel
+            if (currentCategoryLabel) {
+                if (navigationPath.length === 0) {
+                    currentCategoryLabel.textContent = 'Choose your creator types'
+                } else {
+                    currentCategoryLabel.textContent = navigationPath[navigationPath.length - 1].label
+                }
             }
         }
 
         function updateNavigationVisibility() {
+            // Add null checks for navigation elements
+            if (!creatorTypeNav || !navPath) {
+                return
+            }
+            
             if (navigationPath.length > 0) {
                 creatorTypeNav.classList.add('visible')
                 navPath.textContent = navigationPath.map(item => item.label).join(' › ')
@@ -1627,6 +1654,11 @@
         }
 
         function updateSelectedTypes() {
+            // Add null check for selectedTypesContainer
+            if (!selectedTypesContainer) {
+                return
+            }
+            
             selectedTypesContainer.innerHTML = ''
             
             selectedCreatorTypes.forEach(typeId => {
@@ -1848,49 +1880,93 @@
 
         // Actual submission function called after confirmation
         async function submitConfirmedData(submission) {
+            console.log('[TRACE] submitConfirmedData called with:', submission)
+            console.trace('Call stack for submitConfirmedData:')
             // Always save locally first
             saveToLocal(submission)
-            
             // Try to save to database if online
             if (isOnline) {
                 const success = await saveToDatabase(submission)
                 if (success) {
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
-                    
-                    // Email verification is handled automatically by the database
                     showSuccess('Registration successful! Please check your email to verify your address and complete your membership.')
                 } else {
                     showSuccess('Saved locally. Will sync when connection improves.')
                 }
             } else {
+                // Mark offline submissions with 'offline' status for proper sync handling
+                submission.sync_status = 'offline'
+                updateLocalSubmission(submission)
                 showSuccess('Saved locally. Will sync when online.')
             }
-            
-            // Only reset form after successful final submission
+            console.log('[TRACE] About to reset form and call showFormStep')
+            currentSubmission = null
+            // Robustly hide confirmation step
+            const confirmationStep = document.getElementById('confirmationStep')
+            if (confirmationStep) {
+                confirmationStep.style.display = 'none'
+                confirmationStep.style.visibility = 'hidden'
+                confirmationStep.style.zIndex = '-1'
+                confirmationStep.classList.remove('visible')
+            }
+            // Robustly show form and parent scrollable content
+            const formElement = document.getElementById('signupForm')
+            if (formElement) {
+                formElement.style.display = 'block'
+                formElement.style.visibility = 'visible'
+                const scrollableContent = formElement.parentElement
+                if (scrollableContent && scrollableContent.classList.contains('scrollable-content')) {
+                    scrollableContent.style.display = 'block'
+                    scrollableContent.style.visibility = 'visible'
+                }
+            }
+            // Show the submit button - find the one with submitBtn
+            const allFixedBottoms = document.querySelectorAll('.fixed-bottom')
+            allFixedBottoms.forEach(fb => {
+                if (fb.querySelector('#submitBtn')) {
+                    fb.style.display = 'block'
+                }
+            })
+            // Hide offline viewer just in case
+            const offlineViewer = document.getElementById('offlineViewer')
+            if (offlineViewer) {
+                offlineViewer.style.display = 'none'
+                offlineViewer.style.visibility = 'hidden'
+                offlineViewer.style.zIndex = '-1'
+            }
+            // Hide view toggle
+            const viewToggle = document.getElementById('viewToggle')
+            if (viewToggle) viewToggle.style.display = 'none'
+            // Show connection status
+            const connectionStatus = document.getElementById('connectionStatus')
+            if (connectionStatus) connectionStatus.style.display = 'block'
+            updateViewToggle()
             form.reset()
             resetForm()
-            currentSubmission = null
-            showFormStep()
+            console.log('[TRACE] Form reset complete')
         }
 
         function resetForm() {
+            console.log('[TRACE] resetForm called')
             selectedCreatorTypes = []
             otherValue = ""
             navigationPath = []
             currentLevel = creatorTypes
             if (otherInput) otherInput.classList.remove('visible')
             if (memberShowcase) memberShowcase.classList.remove('visible')
-            renderCreatorTypes()
+            console.log('[TRACE] About to call updateSelectedTypes')
+            // Don't call renderCreatorTypes() here - it renders into the modal which isn't visible
             updateSelectedTypes()
             if (bioCharCount) bioCharCount.textContent = '0/300 characters'
             if (quoteCharCount) quoteCharCount.textContent = '0/500 characters'
+            console.log('[TRACE] resetForm complete')
         }
 
         // Database operations
-        async function saveToDatabase(submission) {
-            // In test offline mode, simulate database failure
-            if (testOfflineMode) {
+        async function saveToDatabase(submission, forceSave = false) {
+            // In test offline mode, simulate database failure UNLESS we're force saving during sync
+            if (testOfflineMode && !forceSave) {
                 console.log('🧪 TEST MODE: Simulating database connection failure')
                 return false
             }
@@ -1902,6 +1978,17 @@
             }
             
             try {
+                // First check if email already exists in database
+                const { data: existingMembers, error: checkError } = await supabase
+                    .from('members')
+                    .select('email')
+                    .eq('email', submission.email)
+                
+                if (existingMembers && existingMembers.length > 0) {
+                    console.log(`Email ${submission.email} already exists in database, marking as synced`)
+                    return true // Consider it synced since it's already there
+                }
+                
                 // Generate verification token - the database function will handle sending the email
                 const verificationToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
                 
@@ -1927,6 +2014,11 @@
                 
                 if (error) {
                     console.error('Database save error:', error)
+                    // Check for specific error types
+                    if (error.code === '23505' || error.message?.includes('duplicate')) {
+                        console.log(`Email ${submission.email} already exists (duplicate key error), marking as synced`)
+                        return true // Consider it synced since it's a duplicate
+                    }
                     return false
                 }
                 
@@ -1983,11 +2075,23 @@
 
         function updateLocalSubmission(updatedSubmission) {
             const submissions = getLocalSubmissions()
-            const index = submissions.findIndex(sub => sub.id === updatedSubmission.id)
-            if (index !== -1) {
-                submissions[index] = updatedSubmission
-                localStorage.setItem('dcSignups', JSON.stringify(submissions))
-            }
+            
+            // Remove ALL entries with the same email to prevent duplicates
+            const filteredSubmissions = submissions.filter(sub => sub.email !== updatedSubmission.email)
+            console.log(`[DEBUG] updateLocalSubmission: Removed ${submissions.length - filteredSubmissions.length} entries for ${updatedSubmission.email}`)
+            
+            // Add the updated submission
+            filteredSubmissions.push(updatedSubmission)
+            localStorage.setItem('dcSignups', JSON.stringify(filteredSubmissions))
+            
+            console.log(`[DEBUG] updateLocalSubmission: Updated ${updatedSubmission.email} status to ${updatedSubmission.sync_status}`)
+            
+            // Verify the update was saved
+            const verifySubmissions = JSON.parse(localStorage.getItem('dcSignups') || '[]')
+            const matchingEntries = verifySubmissions.filter(sub => sub.email === updatedSubmission.email)
+            console.log(`[DEBUG] updateLocalSubmission: Verification - ${updatedSubmission.email} now has ${matchingEntries.length} entry(ies) with status ${matchingEntries[0]?.sync_status}`)
+            
+            return true
         }
 
         // Sync pending submissions when coming back online
@@ -1995,7 +2099,22 @@
             if (!isOnline) return
             
             const submissions = getLocalSubmissions()
-            const pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending')
+            let pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending' || sub.sync_status === 'offline')
+            
+            // Deduplicate submissions by email and timestamp
+            const seen = new Set()
+            pendingSubmissions = pendingSubmissions.filter(sub => {
+                const key = `${sub.email}-${sub.created_at}`
+                if (seen.has(key)) {
+                    console.log(`Skipping duplicate submission for ${sub.email}`)
+                    // Mark duplicate as failed to remove from pending count
+                    sub.sync_status = 'duplicate'
+                    updateLocalSubmission(sub)
+                    return false
+                }
+                seen.add(key)
+                return true
+            })
             
             if (pendingSubmissions.length === 0) {
                 console.log('No pending submissions to sync')
@@ -2003,13 +2122,22 @@
             }
             
             console.log(`Syncing ${pendingSubmissions.length} pending submissions...`)
+            console.log('[DEBUG] Pending submissions structure:', pendingSubmissions.map(s => ({email: s.email, id: s.id, sync_status: s.sync_status})))
             showSyncStatus(`🔄 Syncing ${pendingSubmissions.length} offline submissions...`)
             
             let syncedCount = 0
             let failedCount = 0
             
             for (const submission of pendingSubmissions) {
-                const success = await saveToDatabase(submission)
+                // Skip if we've already tried too many times
+                if (submission.attempts >= 3) {
+                    submission.sync_status = 'failed'
+                    updateLocalSubmission(submission)
+                    console.log(`Marking submission for ${submission.email} as permanently failed after ${submission.attempts} attempts`)
+                    continue
+                }
+                
+                const success = await saveToDatabase(submission, true)
                 if (success) {
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
@@ -2017,6 +2145,11 @@
                     console.log(`Synced submission for ${submission.email}`)
                 } else {
                     submission.attempts = (submission.attempts || 0) + 1
+                    // Mark as failed after 3 attempts
+                    if (submission.attempts >= 3) {
+                        submission.sync_status = 'failed'
+                        console.log(`Marking submission for ${submission.email} as permanently failed after ${submission.attempts} attempts`)
+                    }
                     updateLocalSubmission(submission)
                     failedCount++
                     console.log(`Failed to sync submission for ${submission.email}, attempt ${submission.attempts}`)
@@ -2031,6 +2164,32 @@
             if (failedCount > 0) {
                 showSyncStatus(`⚠️ ${failedCount} submissions failed to sync`, 'warning')
                 setTimeout(() => hideSyncStatus(), 5000)
+            }
+            
+            // Update the offline count and list after sync
+            updateViewToggle()
+            populateOfflineSubmissions()
+        }
+        
+        // Migration function to convert old 'pending' submissions to 'offline' if they were from test mode
+        function migratePendingToOffline() {
+            const submissions = getLocalSubmissions()
+            let updated = false
+            
+            submissions.forEach(submission => {
+                // Convert old pending submissions that are likely from offline test mode
+                if (submission.sync_status === 'pending' && !submission.attempts) {
+                    submission.sync_status = 'offline'
+                    submission.attempts = 0
+                    updated = true
+                    console.log(`Migrating submission ${submission.email} from 'pending' to 'offline'`)
+                }
+            })
+            
+            if (updated) {
+                localStorage.setItem('dcSignups', JSON.stringify(submissions))
+                console.log('Migration completed: converted pending submissions to offline status')
+                updateViewToggle()
             }
         }
         
@@ -2095,12 +2254,15 @@
 
         // Step Navigation Functions
         function showFormStep() {
+            console.log('[TRACE] showFormStep called')
             // More aggressive hiding of confirmation step
             const confirmationStep = document.getElementById('confirmationStep')
             if (confirmationStep) {
                 confirmationStep.style.display = 'none'
                 confirmationStep.style.visibility = 'hidden'
                 confirmationStep.style.zIndex = '-1'
+                confirmationStep.classList.remove('visible')
+                console.log('[TRACE] Confirmation step hidden')
             }
             
             // Hide offline viewer as well
@@ -2115,10 +2277,13 @@
             const formElement = document.getElementById('signupForm')
             if (formElement) {
                 formElement.style.display = 'block'
+                formElement.style.visibility = 'visible'
                 // Get the parent scrollable-content that contains the form
                 const scrollableContent = formElement.parentElement
                 if (scrollableContent && scrollableContent.classList.contains('scrollable-content')) {
                     scrollableContent.style.display = 'block'
+                    scrollableContent.style.visibility = 'visible'
+                    console.log('[TRACE] Form and scrollable content shown')
                 }
             }
             
@@ -2321,7 +2486,13 @@
 
         function populateOfflineSubmissions() {
             const container = document.getElementById('offlineSubmissionsList')
-            const submissions = getLocalSubmissions().filter(sub => sub.sync_status === 'pending')
+            // Only show submissions that are NOT synced (pending, offline, or failed)
+            const submissions = getLocalSubmissions().filter(sub => 
+                sub.sync_status === 'pending' || 
+                sub.sync_status === 'offline' || 
+                sub.sync_status === 'failed'
+            )
+            console.log(`[DEBUG] populateOfflineSubmissions: Found ${submissions.length} unsynced submissions`)
             
             if (submissions.length === 0) {
                 container.innerHTML = '<div class="no-offline-submissions">No offline submissions waiting to sync</div>'
@@ -2349,12 +2520,22 @@
         }
 
         function updateViewToggle() {
-            const offlineSubmissions = getLocalSubmissions().filter(sub => sub.sync_status === 'pending')
+            // Only count submissions that are NOT synced (pending, offline, or failed)
+            const allSubmissions = getLocalSubmissions()
+            console.log(`[DEBUG] updateViewToggle: All submissions status:`, allSubmissions.map(s => `${s.email}:${s.sync_status}`))
+            const offlineSubmissions = allSubmissions.filter(sub => 
+                sub.sync_status === 'pending' || 
+                sub.sync_status === 'offline' || 
+                sub.sync_status === 'failed'
+            )
+            console.log(`[DEBUG] updateViewToggle: Found ${offlineSubmissions.length} unsynced submissions:`, offlineSubmissions.map(s => `${s.email}:${s.sync_status}`))
             document.getElementById('offlineCount').textContent = offlineSubmissions.length
             
             // Show view toggle if there are offline submissions
             if (offlineSubmissions.length > 0) {
                 document.getElementById('viewToggle').style.display = 'block'
+            } else {
+                document.getElementById('viewToggle').style.display = 'none'
             }
         }
 
@@ -2463,20 +2644,62 @@
             }
         }
 
-        // Event Listeners for new UI elements
-        document.addEventListener('DOMContentLoaded', function() {
+        // Global function for Join the Community button
+        window.handleJoinCommunity = async function() {
+            console.log('[DEBUG] handleJoinCommunity called, currentSubmission:', currentSubmission)
+            if (currentSubmission) {
+                console.log('[DEBUG] Calling submitConfirmedData...')
+                await submitConfirmedData(currentSubmission)
+                console.log('[DEBUG] submitConfirmedData completed')
+            } else {
+                console.log('[DEBUG] currentSubmission is null, cannot proceed')
+                showError('No submission data found. Please fill out the form again.')
+            }
+        }
+
+        // Setup event listeners for buttons
+        console.log('[SCRIPT PROGRESS] About to define setupButtonListeners function');
+        function setupButtonListeners() {
+            console.log('[DEBUG] Setting up button listeners')
             // Confirmation step buttons - add null checks since they're in hidden elements
             // Edit button event listener removed - using onclick handler instead
 
             const confirmSubmitBtn = document.getElementById('confirmSubmitBtn')
+            console.log('[DEBUG] Looking for confirmSubmitBtn:', confirmSubmitBtn)
             if (confirmSubmitBtn) {
+                console.log('[DEBUG] Adding click listener to confirmSubmitBtn')
                 confirmSubmitBtn.addEventListener('click', async function() {
+                    console.log('[DEBUG] Join the Community clicked via addEventListener, currentSubmission:', currentSubmission)
                     if (currentSubmission) {
                         await submitConfirmedData(currentSubmission)
                         currentSubmission = null
+                    } else {
+                        console.log('[DEBUG] currentSubmission is null, cannot proceed')
+                        showError('No submission data found. Please fill out the form again.')
                     }
                 })
+            } else {
+                console.log('[DEBUG] confirmSubmitBtn not found')
             }
+        }
+
+        // Event Listeners for new UI elements
+        console.log('[DEBUG] Setting up event listeners, readyState:', document.readyState)
+        if (document.readyState === 'loading') {
+            console.log('[DEBUG] Document still loading, waiting for DOMContentLoaded')
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('[DEBUG] DOMContentLoaded fired, calling setupButtonListeners')
+                migratePendingToOffline()
+                setupButtonListeners()
+            });
+        } else {
+            // DOM is already loaded, call setup immediately
+            console.log('[DEBUG] DOM already loaded, calling setupButtonListeners immediately')
+            migratePendingToOffline()
+            setupButtonListeners()
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
 
             // View toggle buttons
             document.getElementById('formViewBtn').addEventListener('click', function() {
@@ -2543,7 +2766,12 @@
             }
             modal.style.display = 'flex'
             console.log('Modal opened, loading creator types...')
-            loadCreatorTypesIntoModal()
+            if (creatorTypes.length === 0) {
+                // If data not yet loaded, fetch it first then populate
+                loadCreatorTypes().then(() => loadCreatorTypesIntoModal())
+            } else {
+                loadCreatorTypesIntoModal()
+            }
         }
 
         function closeCreatorTypeModal() {
@@ -2551,69 +2779,119 @@
         }
 
         function loadCreatorTypesIntoModal() {
+            console.log('🔧 LOADING CREATOR TYPES INTO MODAL - START')
             const container = document.getElementById('creatorTypeCategories')
-            
-            console.log('Loading creator types into modal:', creatorTypes.length, 'categories')
-            
-            if (!creatorTypes || creatorTypes.length === 0) {
-                container.innerHTML = '<p>No creator types available. Please check the database connection.</p>'
+
+            if (!container) {
+                console.error('❌ Container element not found!')
                 return
             }
-            
-            container.innerHTML = creatorTypes.map(category => {
+
+            console.log('✅ Container found:', container)
+
+            // EMERGENCY FIX: Hard-coded fallback – only if no data is loaded
+            if (!creatorTypes || creatorTypes.length === 0) {
+                creatorTypes = [
+                    {
+                        id: "traditional-arts",
+                        label: "Traditional Arts",
+                        description: "Classic artistic mediums and forms",
+                        children: [
+                            { id: "visual-arts", label: "Visual Arts", description: "Painting, drawing, sculpture" },
+                            { id: "music", label: "Music", description: "Composition, performance, production" },
+                            { id: "writing", label: "Writing", description: "Fiction, non-fiction, poetry" },
+                            { id: "photography", label: "Photography", description: "Digital and film photography" },
+                            { id: "performance-acting", label: "Performance/Acting", description: "Theater, film, live performance" }
+                        ]
+                    },
+                    {
+                        id: "technical-creation",
+                        label: "Technical Creation",
+                        description: "Technology-focused creative work",
+                        children: [
+                            { id: "software-development", label: "Software Development", description: "Applications, systems, tools" },
+                            { id: "game-development", label: "Game Development", description: "Video games, interactive media" },
+                            { id: "web-development", label: "Web Development", description: "Websites, web applications" },
+                            { id: "engineering", label: "Engineering", description: "Hardware, systems, innovation" },
+                            { id: "data-science", label: "Data Science", description: "Analytics, visualization, AI/ML" }
+                        ]
+                    },
+                    {
+                        id: "content-creation",
+                        label: "Content Creation",
+                        description: "Digital content and media production",
+                        children: [
+                            { id: "video", label: "Video", description: "Film, streaming, video production" },
+                            { id: "podcasting", label: "Podcasting", description: "Audio content, broadcasting" },
+                            { id: "blogging", label: "Blogging", description: "Written online content" },
+                            { id: "social-media", label: "Social Media", description: "Platform-specific content creation" }
+                        ]
+                    },
+                    {
+                        id: "design-fields",
+                        label: "Design Fields",
+                        description: "Visual and functional design work",
+                        children: [
+                            { id: "ux-ui-design", label: "UX/UI Design", description: "User experience, interface design" },
+                            { id: "graphic-design", label: "Graphic Design", description: "Visual communication, branding" },
+                            { id: "industrial-design", label: "Industrial Design", description: "Product design, manufacturing" }
+                        ]
+                    },
+                    {
+                        id: "other",
+                        label: "Other",
+                        description: "Creative work not listed above",
+                        children: []
+                    }
+                ]
+            } // end fallback guard
+            console.log('✅ Creator types loaded:', creatorTypes.length, 'categories')
+
+            // EMERGENCY FIX: Simple, guaranteed-to-work HTML generation
+            console.log('🔧 Generating HTML for', creatorTypes.length, 'categories')
+
+            let html = ''
+
+            for (let i = 0; i < creatorTypes.length; i++) {
+                const category = creatorTypes[i]
                 const categorySelected = selectedCreatorTypes.includes(category.id)
-                const hasSelectedChildren = category.children && category.children.some(child => 
-                    selectedCreatorTypes.includes(child.id)
-                )
-                
-                console.log(`Category: ${category.label}, has children: ${!!category.children}, children count: ${category.children ? category.children.length : 0}`)
-                
-                return `
-                    <div class="creator-category">
-                        <div class="category-header ${categorySelected ? 'selected' : ''}" 
-                             onclick="toggleCreatorType('${category.id}')">
-                            <div>
-                                <div class="category-title">${category.label}</div>
-                                <div class="category-description">${category.description}</div>
-                            </div>
-                            <div class="category-check ${categorySelected ? 'selected' : ''}">
-                                ${categorySelected ? '✓' : ''}
-                            </div>
-                        </div>
-                        ${category.id === 'other' ? `
-                            <div class="subcategories">
-                                <input type="text" 
-                                       id="otherCreatorTypeInput" 
-                                       placeholder="e.g., Pottery, Stand-up Comedy, Fashion Design..."
-                                       value="${otherValue || ''}"
-                                       onkeyup="handleOtherInput(this.value)"
-                                       onclick="handleOtherInputClick(event)"
-                                       style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
-                            </div>
-                        ` : category.children && category.children.length > 0 ? `
-                            <div class="subcategories">
-                                ${category.children.map(child => {
-                                    const childSelected = selectedCreatorTypes.includes(child.id)
-                                    console.log(`  Child: ${child.label}, selected: ${childSelected}`)
-                                    return `
-                                        <div class="subcategory-card ${childSelected ? 'selected' : ''}"
-                                             onclick="event.stopPropagation(); toggleCreatorType('${child.id}');">
-                                            <div class="subcategory-title">${child.label}</div>
-                                            <div class="subcategory-description">${child.description}</div>
-                                        </div>
-                                    `
-                                }).join('')}
-                            </div>
-                        ` : category.children ? `
-                            <div class="subcategories">
-                                <p style="padding: 16px; color: #6b7280; font-style: italic;">No subcategories available</p>
-                            </div>
-                        ` : ''}
-                    </div>
-                `
-            }).join('')
-            
-            console.log('Modal HTML generated, container updated')
+
+                console.log(`Processing category: ${category.label}`)
+
+                html += '<div class="creator-category">'
+                html += `<div class="category-header ${categorySelected ? 'selected' : ''}" onclick="toggleCreatorType('${category.id}')">`
+                html += '<div>'
+                html += `<div class="category-title">${category.label}</div>`
+                html += `<div class="category-description">${category.description}</div>`
+                html += '</div>'
+                html += `<div class="category-check ${categorySelected ? 'selected' : ''}">`
+                html += categorySelected ? '✓' : ''
+                html += '</div>'
+                html += '</div>'
+
+                if (category.id === 'other') {
+                    html += '<div class="subcategories">'
+                    html += `<input type="text" id="otherCreatorTypeInput" placeholder="e.g., Pottery, Stand-up Comedy, Fashion Design..." value="${otherValue || ''}" onkeyup="handleOtherInput(this.value)" onclick="handleOtherInputClick(event)" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">`
+                    html += '</div>'
+                } else if (category.children && category.children.length > 0) {
+                    html += '<div class="subcategories">'
+                    for (let j = 0; j < category.children.length; j++) {
+                        const child = category.children[j]
+                        const childSelected = selectedCreatorTypes.includes(child.id)
+                        html += `<div class="subcategory-card ${childSelected ? 'selected' : ''}" onclick="event.stopPropagation(); toggleCreatorType('${child.id}');">`
+                        html += `<div class="subcategory-title">${child.label}</div>`
+                        html += `<div class="subcategory-description">${child.description}</div>`
+                        html += '</div>'
+                    }
+                    html += '</div>'
+                }
+
+                html += '</div>'
+            }
+
+            console.log('✅ HTML generated, length:', html.length)
+            container.innerHTML = html
+            console.log('✅ Container updated successfully')
         }
 
         function toggleCreatorType(typeId) {
@@ -2686,36 +2964,53 @@
         }
 
         function updateSelectedTypesDisplay() {
+            console.log('[TRACE] updateSelectedTypesDisplay called')
             const display = document.getElementById('creatorTypeDisplay')
             const count = document.getElementById('selectionCount')
             const container = document.getElementById('selectedTypes')
             
-            const totalCount = selectedCreatorTypes.length + (otherValue ? 1 : 0)
-            count.textContent = `${totalCount} selected`
-            
-            if (totalCount > 0) {
-                display.textContent = 'Creator types selected'
-            } else {
-                display.textContent = 'Click to select your creator types'
-            }
-            
-            // Show selected types as tags
-            container.innerHTML = ''
-            selectedCreatorTypes.forEach(typeId => {
-                const type = findCreatorTypeById(typeId)
-                if (type) {
-                    const tag = document.createElement('div')
-                    tag.className = 'selected-type-tag'
-                    tag.innerHTML = `${type.label} <button type="button" class="remove-type" onclick="removeCreatorType('${typeId}')">×</button>`
-                    container.appendChild(tag)
-                }
+            console.log('[TRACE] Elements found:', {
+                display: display ? 'YES' : 'NO',
+                count: count ? 'YES' : 'NO',
+                container: container ? 'YES' : 'NO'
             })
             
-            if (otherValue) {
-                const tag = document.createElement('div')
-                tag.className = 'selected-type-tag'
-                tag.innerHTML = `Other: ${otherValue} <button type="button" class="remove-type" onclick="removeOtherType()">×</button>`
-                container.appendChild(tag)
+            const totalCount = selectedCreatorTypes.length + (otherValue ? 1 : 0)
+            
+            // Add null check for count
+            if (count) {
+                count.textContent = `${totalCount} selected`
+            }
+            
+            // Add null check for display
+            if (display) {
+                if (totalCount > 0) {
+                    display.textContent = 'Creator types selected'
+                } else {
+                    display.textContent = 'Click to select your creator types'
+                }
+            }
+            
+            // Add null check for container
+            if (container) {
+                // Show selected types as tags
+                container.innerHTML = ''
+                selectedCreatorTypes.forEach(typeId => {
+                    const type = findCreatorTypeById(typeId)
+                    if (type) {
+                        const tag = document.createElement('div')
+                        tag.className = 'selected-type-tag'
+                        tag.innerHTML = `${type.label} <button type="button" class="remove-type" onclick="removeCreatorType('${typeId}')">×</button>`
+                        container.appendChild(tag)
+                    }
+                })
+                
+                if (otherValue) {
+                    const tag = document.createElement('div')
+                    tag.className = 'selected-type-tag'
+                    tag.innerHTML = `Other: ${otherValue} <button type="button" class="remove-type" onclick="removeOtherType()">×</button>`
+                    container.appendChild(tag)
+                }
             }
         }
 
@@ -2835,6 +3130,8 @@
             }, 2000); // Check every 2 seconds
             console.log('Auto-reload enabled (dev mode)');
         }
+        
+        console.log('[SCRIPT END] DC Signup System script has finished loading');
     </script>
 </body>
 </html>

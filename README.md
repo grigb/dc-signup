@@ -1,81 +1,105 @@
 # DC Signup System
 
-An offline-first, progressive signup system for the Distributed Creatives network. Works as both a modal component across websites and a standalone conference registration tool.
+An offline-first Progressive Web App (PWA) for member signup and management in the Distributed Creatives network. Features full offline support, email verification, and admin tools.
 
 ## 🚀 Quick Start
 
-### Test Current Version (v1-basic)
-1. Open `v1-basic/index.html` in your mobile browser
-2. Fill out name and email
-3. Tap "Join Now" to save locally
-4. Tap "View Stored Data" to see saved entries
-
-### Mobile Testing
+### Local Development
 ```bash
-# Serve locally to test on mobile device
-python3 -m http.server 8000
-# Then visit http://your-ip:8000/v1-basic/ on your phone/iPad
+npm install
+npm run dev              # Start local development server
 ```
 
-## 📋 Development Progress
+### Production Build & Deploy
+```bash
+npm run build            # Copies src/ to dist/
+npm run deploy          # Deploy to Cloudflare Pages
+```
 
-- ✅ **v1-basic**: Name + email capture with localStorage
-- ⏳ **v2-enhanced**: Creator types + improved UX  
-- ⏳ **v3-offline**: PWA + IndexedDB + sync queue
-- ⏳ **v4-sync**: Backend integration + cloud sync
-- ⏳ **v5-complete**: Full features + React components
+### Testing
+```bash
+npm test                # Run Playwright E2E tests
+```
 
-## 🎯 Features by Version
+## 📋 Current Status
 
-### v1-basic (Current)
-- Simple name/email form
-- localStorage persistence  
-- Mobile-responsive design
-- View/clear stored data
-- Form validation
+**Production Ready** - The system is deployed and operational on Cloudflare Pages with:
+- ✅ Complete member signup flow with validation
+- ✅ Offline-first PWA functionality  
+- ✅ Email verification system
+- ✅ Admin dashboard for member management
+- ✅ Automatic data sync when online
 
-### v2-enhanced (Next)
-- Creator type selection
-- Country dropdown
-- Enhanced validation
-- Better mobile UX
+## 🎯 Key Features
 
-### Conference Requirements
-- ✅ Works offline on iPad
-- ✅ Captures basic info locally
-- ⏳ Syncs when online
-- ⏳ Conference-specific UI
+### Member Experience
+- Multi-step signup form with creator type selection
+- Works completely offline (PWA installable)
+- Email verification for account activation
+- Personal dashboard to view/edit profile
 
-## 📱 Mobile Testing Instructions
+### Admin Features
+- Member management dashboard
+- Approve/reject applications
+- View member details and status
+- Export member data
 
-1. **iPhone/iPad**: Open Safari and navigate to the file
-2. **Android**: Open Chrome and navigate to the file  
-3. **Test offline**: Turn off WiFi after loading page
-4. **Verify storage**: Submit form, then refresh page and check "View Stored Data"
+### Technical Features
+- Progressive Web App (installable on mobile/desktop)
+- IndexedDB for offline data storage
+- Service Worker for offline functionality
+- Automatic sync queue for offline changes
+- Supabase backend integration
+
+## 📱 Mobile/PWA Installation
+
+1. **iPhone/iPad**: Open in Safari → Share → Add to Home Screen
+2. **Android**: Open in Chrome → Three dots → Install app
+3. **Desktop**: Click install icon in address bar (Chrome/Edge)
 
 ## 🛠 Technical Stack
 
-### Current (v1)
-- Pure HTML/CSS/JavaScript
-- localStorage for persistence
-- Responsive CSS design
+### Frontend
+- Vanilla JavaScript (ES6+)
+- HTML5 & CSS3 with CSS Variables
+- Service Worker for offline support
+- IndexedDB for local storage
 
-### Planned (v5)
-- React/TypeScript components
-- IndexedDB with Dexie.js
-- Service Worker for PWA
-- Node.js backend with sync
-- Tailwind CSS styling
+### Backend
+- Supabase (PostgreSQL database)
+- Supabase Auth for authentication
+- Supabase Storage for file uploads
+- Edge Functions for email sending
+
+### Deployment
+- Cloudflare Pages (hosting)
+- Custom domain support
+- SSL/HTTPS enabled
 
 ## 📁 Project Structure
 
 ```
 dc-signup-system/
-├── README.md (this file)
-├── ROADMAP.md (detailed development plan)
-├── v1-basic/
-│   └── index.html (current version)
-└── [future versions will be added here]
+├── src/                    # Source files
+│   ├── index.html         # Landing/signup page
+│   ├── admin.html         # Admin dashboard
+│   ├── member.html        # Member dashboard
+│   ├── verify.html        # Email verification
+│   ├── assets/            # Icons, manifest, etc.
+│   └── sw.js              # Service worker
+├── dist/                   # Build output
+├── database/              # SQL schemas and migrations
+│   ├── schemas/           # Database schemas
+│   ├── migrations/        # Database migrations
+│   └── functions/         # SQL functions
+├── docs/                  # Documentation
+│   ├── deployment/        # Deployment guides
+│   ├── architecture/      # System architecture
+│   └── CHANGELOG.md       # Version history
+├── tests/                 # Test files
+│   ├── e2e/              # End-to-end tests
+│   └── manual/           # Manual test scripts
+└── supabase/             # Supabase functions
 ```
 
 ## 🔗 Repository

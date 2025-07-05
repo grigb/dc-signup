@@ -1975,6 +1975,17 @@
             }
             
             try {
+                // First check if email already exists in database
+                const { data: existingMembers, error: checkError } = await supabase
+                    .from('members')
+                    .select('email')
+                    .eq('email', submission.email)
+                
+                if (existingMembers && existingMembers.length > 0) {
+                    console.log(`Email ${submission.email} already exists in database, marking as synced`)
+                    return true // Consider it synced since it's already there
+                }
+                
                 // Generate verification token - the database function will handle sending the email
                 const verificationToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
                 
@@ -2000,6 +2011,11 @@
                 
                 if (error) {
                     console.error('Database save error:', error)
+                    // Check for specific error types
+                    if (error.code === '23505' || error.message?.includes('duplicate')) {
+                        console.log(`Email ${submission.email} already exists (duplicate key error), marking as synced`)
+                        return true // Consider it synced since it's a duplicate
+                    }
                     return false
                 }
                 
@@ -2068,7 +2084,22 @@
             if (!isOnline) return
             
             const submissions = getLocalSubmissions()
-            const pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending')
+            let pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending')
+            
+            // Deduplicate submissions by email and timestamp
+            const seen = new Set()
+            pendingSubmissions = pendingSubmissions.filter(sub => {
+                const key = `${sub.email}-${sub.created_at}`
+                if (seen.has(key)) {
+                    console.log(`Skipping duplicate submission for ${sub.email}`)
+                    // Mark duplicate as failed to remove from pending count
+                    sub.sync_status = 'duplicate'
+                    updateLocalSubmission(sub)
+                    return false
+                }
+                seen.add(key)
+                return true
+            })
             
             if (pendingSubmissions.length === 0) {
                 console.log('No pending submissions to sync')
@@ -2082,6 +2113,14 @@
             let failedCount = 0
             
             for (const submission of pendingSubmissions) {
+                // Skip if we've already tried too many times
+                if (submission.attempts >= 3) {
+                    submission.sync_status = 'failed'
+                    updateLocalSubmission(submission)
+                    console.log(`Marking submission for ${submission.email} as permanently failed after ${submission.attempts} attempts`)
+                    continue
+                }
+                
                 const success = await saveToDatabase(submission)
                 if (success) {
                     submission.sync_status = 'synced'
@@ -2090,6 +2129,11 @@
                     console.log(`Synced submission for ${submission.email}`)
                 } else {
                     submission.attempts = (submission.attempts || 0) + 1
+                    // Mark as failed after 3 attempts
+                    if (submission.attempts >= 3) {
+                        submission.sync_status = 'failed'
+                        console.log(`Marking submission for ${submission.email} as permanently failed after ${submission.attempts} attempts`)
+                    }
                     updateLocalSubmission(submission)
                     failedCount++
                     console.log(`Failed to sync submission for ${submission.email}, attempt ${submission.attempts}`)
@@ -2105,6 +2149,9 @@
                 showSyncStatus(`⚠️ ${failedCount} submissions failed to sync`, 'warning')
                 setTimeout(() => hideSyncStatus(), 5000)
             }
+            
+            // Update the offline count after sync
+            updateViewToggle()
         }
         
         function showSyncStatus(message, type = 'info') {

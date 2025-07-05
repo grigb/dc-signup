@@ -1895,6 +1895,9 @@
                     showSuccess('Saved locally. Will sync when connection improves.')
                 }
             } else {
+                // Mark offline submissions with 'offline' status for proper sync handling
+                submission.sync_status = 'offline'
+                updateLocalSubmission(submission)
                 showSuccess('Saved locally. Will sync when online.')
             }
             console.log('[TRACE] About to reset form and call showFormStep')
@@ -1961,9 +1964,9 @@
         }
 
         // Database operations
-        async function saveToDatabase(submission) {
-            // In test offline mode, simulate database failure
-            if (testOfflineMode) {
+        async function saveToDatabase(submission, forceSave = false) {
+            // In test offline mode, simulate database failure UNLESS we're force saving during sync
+            if (testOfflineMode && !forceSave) {
                 console.log('🧪 TEST MODE: Simulating database connection failure')
                 return false
             }
@@ -2072,11 +2075,23 @@
 
         function updateLocalSubmission(updatedSubmission) {
             const submissions = getLocalSubmissions()
-            const index = submissions.findIndex(sub => sub.id === updatedSubmission.id)
-            if (index !== -1) {
-                submissions[index] = updatedSubmission
-                localStorage.setItem('dcSignups', JSON.stringify(submissions))
-            }
+            
+            // Remove ALL entries with the same email to prevent duplicates
+            const filteredSubmissions = submissions.filter(sub => sub.email !== updatedSubmission.email)
+            console.log(`[DEBUG] updateLocalSubmission: Removed ${submissions.length - filteredSubmissions.length} entries for ${updatedSubmission.email}`)
+            
+            // Add the updated submission
+            filteredSubmissions.push(updatedSubmission)
+            localStorage.setItem('dcSignups', JSON.stringify(filteredSubmissions))
+            
+            console.log(`[DEBUG] updateLocalSubmission: Updated ${updatedSubmission.email} status to ${updatedSubmission.sync_status}`)
+            
+            // Verify the update was saved
+            const verifySubmissions = JSON.parse(localStorage.getItem('dcSignups') || '[]')
+            const matchingEntries = verifySubmissions.filter(sub => sub.email === updatedSubmission.email)
+            console.log(`[DEBUG] updateLocalSubmission: Verification - ${updatedSubmission.email} now has ${matchingEntries.length} entry(ies) with status ${matchingEntries[0]?.sync_status}`)
+            
+            return true
         }
 
         // Sync pending submissions when coming back online
@@ -2084,7 +2099,7 @@
             if (!isOnline) return
             
             const submissions = getLocalSubmissions()
-            let pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending')
+            let pendingSubmissions = submissions.filter(sub => sub.sync_status === 'pending' || sub.sync_status === 'offline')
             
             // Deduplicate submissions by email and timestamp
             const seen = new Set()
@@ -2107,6 +2122,7 @@
             }
             
             console.log(`Syncing ${pendingSubmissions.length} pending submissions...`)
+            console.log('[DEBUG] Pending submissions structure:', pendingSubmissions.map(s => ({email: s.email, id: s.id, sync_status: s.sync_status})))
             showSyncStatus(`🔄 Syncing ${pendingSubmissions.length} offline submissions...`)
             
             let syncedCount = 0
@@ -2121,7 +2137,7 @@
                     continue
                 }
                 
-                const success = await saveToDatabase(submission)
+                const success = await saveToDatabase(submission, true)
                 if (success) {
                     submission.sync_status = 'synced'
                     updateLocalSubmission(submission)
@@ -2150,8 +2166,31 @@
                 setTimeout(() => hideSyncStatus(), 5000)
             }
             
-            // Update the offline count after sync
+            // Update the offline count and list after sync
             updateViewToggle()
+            populateOfflineSubmissions()
+        }
+        
+        // Migration function to convert old 'pending' submissions to 'offline' if they were from test mode
+        function migratePendingToOffline() {
+            const submissions = getLocalSubmissions()
+            let updated = false
+            
+            submissions.forEach(submission => {
+                // Convert old pending submissions that are likely from offline test mode
+                if (submission.sync_status === 'pending' && !submission.attempts) {
+                    submission.sync_status = 'offline'
+                    submission.attempts = 0
+                    updated = true
+                    console.log(`Migrating submission ${submission.email} from 'pending' to 'offline'`)
+                }
+            })
+            
+            if (updated) {
+                localStorage.setItem('dcSignups', JSON.stringify(submissions))
+                console.log('Migration completed: converted pending submissions to offline status')
+                updateViewToggle()
+            }
         }
         
         function showSyncStatus(message, type = 'info') {
@@ -2447,7 +2486,13 @@
 
         function populateOfflineSubmissions() {
             const container = document.getElementById('offlineSubmissionsList')
-            const submissions = getLocalSubmissions().filter(sub => sub.sync_status === 'pending')
+            // Only show submissions that are NOT synced (pending, offline, or failed)
+            const submissions = getLocalSubmissions().filter(sub => 
+                sub.sync_status === 'pending' || 
+                sub.sync_status === 'offline' || 
+                sub.sync_status === 'failed'
+            )
+            console.log(`[DEBUG] populateOfflineSubmissions: Found ${submissions.length} unsynced submissions`)
             
             if (submissions.length === 0) {
                 container.innerHTML = '<div class="no-offline-submissions">No offline submissions waiting to sync</div>'
@@ -2475,12 +2520,22 @@
         }
 
         function updateViewToggle() {
-            const offlineSubmissions = getLocalSubmissions().filter(sub => sub.sync_status === 'pending')
+            // Only count submissions that are NOT synced (pending, offline, or failed)
+            const allSubmissions = getLocalSubmissions()
+            console.log(`[DEBUG] updateViewToggle: All submissions status:`, allSubmissions.map(s => `${s.email}:${s.sync_status}`))
+            const offlineSubmissions = allSubmissions.filter(sub => 
+                sub.sync_status === 'pending' || 
+                sub.sync_status === 'offline' || 
+                sub.sync_status === 'failed'
+            )
+            console.log(`[DEBUG] updateViewToggle: Found ${offlineSubmissions.length} unsynced submissions:`, offlineSubmissions.map(s => `${s.email}:${s.sync_status}`))
             document.getElementById('offlineCount').textContent = offlineSubmissions.length
             
             // Show view toggle if there are offline submissions
             if (offlineSubmissions.length > 0) {
                 document.getElementById('viewToggle').style.display = 'block'
+            } else {
+                document.getElementById('viewToggle').style.display = 'none'
             }
         }
 
@@ -2634,11 +2689,13 @@
             console.log('[DEBUG] Document still loading, waiting for DOMContentLoaded')
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('[DEBUG] DOMContentLoaded fired, calling setupButtonListeners')
+                migratePendingToOffline()
                 setupButtonListeners()
             });
         } else {
             // DOM is already loaded, call setup immediately
             console.log('[DEBUG] DOM already loaded, calling setupButtonListeners immediately')
+            migratePendingToOffline()
             setupButtonListeners()
         }
 

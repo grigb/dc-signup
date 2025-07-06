@@ -921,7 +921,7 @@
                         .from('members')
                         .select('*')
                         .order('created_at', { ascending: false })
-                        .limit(3);
+;
                     data = res.data || [];
                     error = res.error;
                 } catch (e) {

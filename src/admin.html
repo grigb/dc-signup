@@ -590,7 +590,7 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>🏛️ DC Genesis Admin</h1>
+            <h1>🏛️ DC Member Admin</h1>
             <div class="auth-section">
                 <span id="userEmail"></span>
                 <button id="logoutBtn" class="btn btn-edit hidden">Logout</button>
@@ -624,33 +624,33 @@
                 <button class="nav-tab" onclick="showCreatorTypes()">🎨 Creator Types Management</button>
             </div>
 
-            <!-- Statistics -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Members</h3>
-                    <div class="number" id="totalMembers">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Genesis Members</h3>
-                    <div class="number" id="genesisMembers">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Email Verified</h3>
-                    <div class="number" id="verifiedMembers">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Pending Sync</h3>
-                    <div class="number" id="pendingSync">0</div>
-                </div>
-            </div>
-
-            <!-- Export Section -->
-            <div class="export-section">
-                <button id="exportBtn" class="export-btn">📊 Export to CSV</button>
-            </div>
-
             <!-- Member Management Section -->
             <div id="memberManagementSection" class="admin-section active">
+                <!-- Member Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Members</h3>
+                        <div class="number" id="totalMembers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Genesis Members</h3>
+                        <div class="number" id="genesisMembers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Email Verified</h3>
+                        <div class="number" id="verifiedMembers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Sync</h3>
+                        <div class="number" id="pendingSync">0</div>
+                    </div>
+                </div>
+
+                <!-- Export Section -->
+                <div class="export-section">
+                    <button id="exportBtn" class="export-btn">📊 Export to CSV</button>
+                </div>
+
                 <!-- Members Table -->
                 <div class="members-section">
                     <div class="section-header">
@@ -716,9 +716,29 @@
 
             <!-- Creator Types Management Section -->
             <div id="creatorTypesSection" class="admin-section">
+                <!-- Creator Types Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Categories</h3>
+                        <div class="number" id="totalCategories">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Subcategories</h3>
+                        <div class="number" id="totalSubcategories">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Last Updated</h3>
+                        <div class="number" id="lastUpdated" style="font-size: 14px;">N/A</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Configuration Status</h3>
+                        <div class="number" id="configStatus" style="font-size: 14px;">Loaded</div>
+                    </div>
+                </div>
+
                 <div class="members-section">
                     <div class="section-header">
-                        <h2 class="section-title">Creator Types Management</h2>
+                        <h2 class="section-title">Creator Types Configuration</h2>
                         <div class="filters">
                             <button id="addCategoryBtn" class="btn btn-edit">+ Add Category</button>
                             <button id="saveCreatorTypesBtn" class="btn btn-verify">💾 Save Changes</button>
@@ -789,6 +809,12 @@
         let filteredMembers = []
         let pendingAction = null
         let creatorTypesData = null
+        
+        // Pagination state
+        let currentPage = 1
+        let pageSize = 25
+        let totalMembers = 0
+        let totalPages = 0
         
         // --- IndexedDB Offline Cache for Members ---
         const ADMIN_CACHE_DB = 'admin-members-cache-v1';
@@ -890,6 +916,9 @@
             confirmBtn.addEventListener('click', executeAction)
             addCategoryBtn.addEventListener('click', addNewCategory)
             saveCreatorTypesBtn.addEventListener('click', saveCreatorTypes)
+            
+            // Pagination event listeners
+            document.getElementById('pageSizeSelect').addEventListener('change', handlePageSizeChange)
             
             // Close modal when clicking outside
             confirmModal.addEventListener('click', (e) => {
@@ -1054,32 +1083,85 @@
                 loadingMessage.classList.remove('hidden');
                 membersTable.classList.add('hidden');
                 errorMessage.classList.add('hidden');
+                document.getElementById('paginationControls').classList.add('hidden');
                 isOfflineMode = false;
                 let data = [];
+                let count = 0;
                 let error = null;
+                
                 try {
-                    const res = await supabase
-                        .from('members')
-                        .select('*')
-                        .order('created_at', { ascending: false })
-;
+                    // Calculate pagination range
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const endIndex = startIndex + pageSize - 1;
+                    
+                    // Build query with filters
+                    let query = supabase.from('members').select('*', { count: 'exact' });
+                    
+                    // Apply status filter
+                    const filter = statusFilter.value;
+                    if (filter) {
+                        switch (filter) {
+                            case 'verified':
+                                query = query.eq('email_verified', true).or('archived.is.null,archived.eq.false');
+                                break;
+                            case 'pending':
+                                query = query.eq('email_verified', false).or('archived.is.null,archived.eq.false');
+                                break;
+                            case 'genesis':
+                                query = query.eq('include_in_genesis_group', true).or('archived.is.null,archived.eq.false');
+                                break;
+                            case 'archived':
+                                query = query.eq('archived', true);
+                                break;
+                        }
+                    } else {
+                        // Show only non-archived by default
+                        query = query.or('archived.is.null,archived.eq.false');
+                    }
+                    
+                    // Apply search filter
+                    const searchTerm = searchBar.value.trim();
+                    if (searchTerm) {
+                        query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+                    }
+                    
+                    // Apply pagination and ordering
+                    const res = await query
+                        .range(startIndex, endIndex)
+                        .order('created_at', { ascending: false });
+                    
                     data = res.data || [];
+                    count = res.count || 0;
                     error = res.error;
                 } catch (e) {
                     error = e;
                 }
+                
                 if (error || !data.length) {
                     // Try offline cache
                     data = await getMembersFromIndexedDB();
+                    count = data.length;
                     isOfflineMode = true;
+                    
+                    // Apply pagination to offline data
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const endIndex = startIndex + pageSize;
+                    data = data.slice(startIndex, endIndex);
                 } else {
                     await cacheMembersToIndexedDB(data);
                 }
+                
                 members = data;
+                totalMembers = count;
+                totalPages = Math.ceil(totalMembers / pageSize);
+                
                 renderMembers();
                 updateStatistics();
+                updatePaginationControls();
+                
                 loadingMessage.classList.add('hidden');
                 membersTable.classList.remove('hidden');
+                document.getElementById('paginationControls').classList.remove('hidden');
                 showOfflineBanner(isOfflineMode);
             } catch (error) {
                 console.error('Error loading members:', error);
@@ -1089,7 +1171,7 @@
         }
         
         function renderMembers() {
-            const filteredMembers = getFilteredMembers();
+            const filteredMembers = members; // Use server-side pagination, no client-side filtering
             // Bulk select header
             let headerCheckbox = `<input type="checkbox" id="selectAllCheckbox" ${filteredMembers.length && filteredMembers.every(m => selectedMemberIds.has(m.id)) ? 'checked' : ''} />`;
             membersTable.querySelector('thead tr').innerHTML = `
@@ -1226,11 +1308,97 @@
         }
         
         function filterMembers() {
-            renderMembers()
+            // Reset to page 1 when filtering
+            currentPage = 1;
+            loadMembers();
         }
         
         function handleSearch() {
-            renderMembers()
+            // Reset to page 1 when searching
+            currentPage = 1;
+            loadMembers();
+        }
+        
+        // Pagination Functions
+        function goToPage(pageNum) {
+            if (pageNum >= 1 && pageNum <= totalPages) {
+                currentPage = pageNum;
+                loadMembers();
+            }
+        }
+        
+        function handlePageSizeChange() {
+            pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+            currentPage = 1; // Reset to first page when changing page size
+            loadMembers();
+        }
+        
+        function updatePaginationControls() {
+            const paginationInfo = document.getElementById('paginationInfo');
+            const firstPageBtn = document.getElementById('firstPageBtn');
+            const prevPageBtn = document.getElementById('prevPageBtn');
+            const nextPageBtn = document.getElementById('nextPageBtn');
+            const lastPageBtn = document.getElementById('lastPageBtn');
+            const pageNumbers = document.getElementById('pageNumbers');
+            
+            // Update pagination info
+            const startItem = (currentPage - 1) * pageSize + 1;
+            const endItem = Math.min(currentPage * pageSize, totalMembers);
+            paginationInfo.textContent = `Showing ${startItem}-${endItem} of ${totalMembers} members`;
+            
+            // Update button states
+            firstPageBtn.disabled = currentPage === 1;
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+            lastPageBtn.disabled = currentPage === totalPages;
+            
+            // Update page numbers
+            pageNumbers.innerHTML = generatePageNumbers();
+        }
+        
+        function generatePageNumbers() {
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Adjust start page if we're near the end
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            let pageHtml = '';
+            for (let i = startPage; i <= endPage; i++) {
+                pageHtml += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            
+            return pageHtml;
+        }
+        
+        // Tab Navigation Functions
+        function showMemberManagement() {
+            // Remove active class from all tabs and sections
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.admin-section').forEach(section => section.classList.remove('active'));
+            
+            // Add active class to member management tab and section
+            document.querySelector('.nav-tab[onclick="showMemberManagement()"]').classList.add('active');
+            document.getElementById('memberManagementSection').classList.add('active');
+            
+            // Load members when switching to member management
+            loadMembers();
+        }
+        
+        function showCreatorTypes() {
+            // Remove active class from all tabs and sections
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.admin-section').forEach(section => section.classList.remove('active'));
+            
+            // Add active class to creator types tab and section
+            document.querySelector('.nav-tab[onclick="showCreatorTypes()"]').classList.add('active');
+            document.getElementById('creatorTypesSection').classList.add('active');
+            
+            // Load creator types when switching to creator types management
+            loadCreatorTypes();
         }
         
         function showConfirmModal(title, message, action) {
@@ -1406,15 +1574,36 @@
                 const response = await fetch('./creator-types.json')
                 creatorTypesData = await response.json()
                 renderCreatorTypesEditor()
+                updateCreatorTypesStatistics()
             } catch (error) {
                 console.error('Failed to load creator types:', error)
                 showError('Failed to load creator types configuration')
             }
         }
+        
+        function updateCreatorTypesStatistics() {
+            if (!creatorTypesData) return
+            
+            const totalCategories = creatorTypesData.creatorTypes.length
+            let totalSubcategories = 0
+            
+            creatorTypesData.creatorTypes.forEach(category => {
+                if (category.children) {
+                    totalSubcategories += category.children.length
+                }
+            })
+            
+            document.getElementById('totalCategories').textContent = totalCategories
+            document.getElementById('totalSubcategories').textContent = totalSubcategories
+            document.getElementById('lastUpdated').textContent = creatorTypesData.lastUpdated || 'Unknown'
+            document.getElementById('configStatus').textContent = 'Loaded'
+        }
 
         function renderCreatorTypesEditor() {
             if (!creatorTypesData) return
 
+            updateCreatorTypesStatistics()
+            
             creatorTypesEditor.innerHTML = creatorTypesData.creatorTypes.map((category, categoryIndex) => `
                 <div class="creator-category-editor" data-category-index="${categoryIndex}">
                     <div class="category-editor-header">

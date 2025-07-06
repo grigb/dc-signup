@@ -18,7 +18,8 @@
       "mcp__playwright__browser_tab_new",
       "mcp__playwright__browser_close",
       "mcp__playwright__browser_handle_dialog",
-      "mcp__playwright__browser_navigate_back"
+      "mcp__playwright__browser_navigate_back",
+      "mcp__playwright__browser_hover"
     ],
     "deny": []
   }

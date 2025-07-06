@@ -920,7 +920,8 @@
                     const res = await supabase
                         .from('members')
                         .select('*')
-                        .order('created_at', { ascending: false });
+                        .order('created_at', { ascending: false })
+                        .limit(3);
                     data = res.data || [];
                     error = res.error;
                 } catch (e) {

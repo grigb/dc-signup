@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Delete Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Admin Delete Permission Test</h1>
+    <p>This page tests if the admin can perform DELETE operations after the migration.</p>
+    <button onclick="testDelete()">Test Delete Permissions</button>
+    <div id="results"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://jgnyutkpxapaghderjmj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnbnl1dGtweGFwYWdoZGVyam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyOTE5MTMsImV4cCI6MjA2Njg2NzkxM30.4GkS72fKX9trYQIfeXMmZJ2iM2menAjYdCHuHb3dOs8';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function testDelete() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing...</p>';
+
+            try {
+                // Test authentication
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    results.innerHTML = '<p style="color: red;">❌ Not authenticated. Please login to admin first.</p>';
+                    return;
+                }
+
+                // Test admin verification
+                const { data: adminCheck } = await supabase.rpc('verify_admin_user', {
+                    user_email: session.user.email
+                });
+
+                if (!adminCheck) {
+                    results.innerHTML = '<p style="color: red;">❌ Not an admin user.</p>';
+                    return;
+                }
+
+                // Test DELETE with non-existent ID (won't delete anything)
+                const { error: deleteError } = await supabase
+                    .from('members')
+                    .delete()
+                    .eq('id', '00000000-0000-0000-0000-000000000000');
+
+                if (deleteError && deleteError.message.includes('RLS')) {
+                    results.innerHTML = '<p style="color: red;">❌ DELETE BLOCKED BY RLS: ' + deleteError.message + '</p>';
+                } else {
+                    results.innerHTML = '<p style="color: green;">✅ DELETE PERMISSIONS WORKING! (No rows deleted, which is expected)</p>';
+                }
+
+            } catch (error) {
+                results.innerHTML = '<p style="color: red;">❌ Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

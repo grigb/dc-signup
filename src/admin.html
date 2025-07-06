@@ -479,6 +479,112 @@
             background: #ef4444;
             color: white;
         }
+
+        /* Navigation Tabs */
+        .admin-nav {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 16px 24px;
+            background: #f8fafc;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tab:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        /* Pagination */
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .pagination-info {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 16px;
+        }
+
+        .page-size-selector select {
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -512,6 +618,12 @@
     <!-- Admin Dashboard -->
     <div id="adminSection" class="hidden">
         <div class="container">
+            <!-- Navigation Tabs -->
+            <div class="admin-nav">
+                <button class="nav-tab active" onclick="showMemberManagement()">👥 Member Management</button>
+                <button class="nav-tab" onclick="showCreatorTypes()">🎨 Creator Types Management</button>
+            </div>
+
             <!-- Statistics -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -537,10 +649,12 @@
                 <button id="exportBtn" class="export-btn">📊 Export to CSV</button>
             </div>
 
-            <!-- Members Table -->
-            <div class="members-section">
-                <div class="section-header">
-                    <h2 class="section-title">Member Management</h2>
+            <!-- Member Management Section -->
+            <div id="memberManagementSection" class="admin-section active">
+                <!-- Members Table -->
+                <div class="members-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Member Management</h2>
                     <div class="filters">
                         <input type="text" id="searchBar" class="search-bar" placeholder="Search by name or email...">
                         <select id="statusFilter" class="filter-select">
@@ -573,21 +687,48 @@
                     <tbody id="membersTableBody">
                     </tbody>
                 </table>
-            </div>
 
-            <!-- Creator Types Management -->
-            <div class="members-section" style="margin-top: 30px;">
-                <div class="section-header">
-                    <h2 class="section-title">Creator Types Management</h2>
-                    <div class="filters">
-                        <button id="addCategoryBtn" class="btn btn-edit">+ Add Category</button>
-                        <button id="saveCreatorTypesBtn" class="btn btn-verify">💾 Save Changes</button>
+                <!-- Pagination Controls -->
+                <div class="pagination-controls hidden" id="paginationControls">
+                    <div class="pagination-info">
+                        <span id="paginationInfo">Showing 1-10 of 100 members</span>
+                        <div class="page-size-selector">
+                            <label>Show:</label>
+                            <select id="pageSizeSelect">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span>per page</span>
+                        </div>
+                    </div>
+                    <div class="pagination-buttons">
+                        <button class="pagination-btn" id="firstPageBtn" onclick="goToPage(1)">First</button>
+                        <button class="pagination-btn" id="prevPageBtn" onclick="goToPage(currentPage - 1)">Previous</button>
+                        <div id="pageNumbers"></div>
+                        <button class="pagination-btn" id="nextPageBtn" onclick="goToPage(currentPage + 1)">Next</button>
+                        <button class="pagination-btn" id="lastPageBtn" onclick="goToPage(totalPages)">Last</button>
                     </div>
                 </div>
+                </div>
+            </div>
 
-                <div id="creatorTypesContainer" style="padding: 20px;">
-                    <div id="creatorTypesEditor">
-                        <!-- Creator types editor will be populated here -->
+            <!-- Creator Types Management Section -->
+            <div id="creatorTypesSection" class="admin-section">
+                <div class="members-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Creator Types Management</h2>
+                        <div class="filters">
+                            <button id="addCategoryBtn" class="btn btn-edit">+ Add Category</button>
+                            <button id="saveCreatorTypesBtn" class="btn btn-verify">💾 Save Changes</button>
+                        </div>
+                    </div>
+
+                    <div id="creatorTypesContainer" style="padding: 20px;">
+                        <div id="creatorTypesEditor">
+                            <!-- Creator types editor will be populated here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -595,7 +736,7 @@
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmModal" class="modal-overlay hidden" style="display: none;">
+    <div id="confirmModal" class="modal-overlay hidden">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 class="modal-title" id="modalTitle">Confirm Action</h3>

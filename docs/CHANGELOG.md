@@ -18,3 +18,8 @@
 
 ### Notes
 - No new files or dependencies added. All changes are minimal and follow project and CLAUDE.md rules. 
+## 2025-07-05 - AI Assistant
+### Changed
+- Extracted CSS from src/index-refactor.html into new file src/index.css
+- Removed inline <style> block and linked external stylesheet in src/index-refactor.html
+

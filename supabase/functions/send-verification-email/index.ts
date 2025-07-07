@@ -19,7 +19,9 @@ async function sendEmailViaSES(email: string, name: string, verificationToken: s
     throw new Error('AWS credentials not configured')
   }
 
-  const verificationUrl = `https://signup.distributedcreatives.org/verify?token=${verificationToken}`
+  // Use environment variable for base URL or fallback to localhost for development
+  const baseUrl = Deno.env.get('VERIFICATION_BASE_URL') || 'http://localhost:4100'
+  const verificationUrl = `${baseUrl}/verify?token=${verificationToken}`
   
   // Construct the email
   const subject = 'Welcome to Distributed Creatives - Please Verify Your Email'

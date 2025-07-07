@@ -198,7 +198,7 @@
                         <button type="button" class="submit-btn" id="editBtn" style="background: #64748b; flex: 1;" onclick="handleEditDetails()">
                             ← Edit Details
                         </button>
-                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;" onclick="console.log('onclick fired'); handleJoinCommunity()">
+                        <button type="button" class="submit-btn" id="confirmSubmitBtn" style="flex: 2;">
                             Join the Community
                         </button>
                     </div>
@@ -1656,16 +1656,7 @@
             console.log('[DEBUG] Looking for confirmSubmitBtn:', confirmSubmitBtn)
             if (confirmSubmitBtn) {
                 console.log('[DEBUG] Adding click listener to confirmSubmitBtn')
-                confirmSubmitBtn.addEventListener('click', async function() {
-                    console.log('[DEBUG] Join the Community clicked via addEventListener, currentSubmission:', currentSubmission)
-                    if (currentSubmission) {
-                        await submitConfirmedData(currentSubmission)
-                        currentSubmission = null
-                    } else {
-                        console.log('[DEBUG] currentSubmission is null, cannot proceed')
-                        showError('No submission data found. Please fill out the form again.')
-                    }
-                })
+                confirmSubmitBtn.addEventListener('click', handleJoinCommunity)
             } else {
                 console.log('[DEBUG] confirmSubmitBtn not found')
             }

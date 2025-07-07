@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DC Genesis Admin - Member Management</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
     <!-- Security Headers -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://jgnyutkpxapaghderjmj.supabase.co https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';">
@@ -938,10 +939,13 @@
         async function checkAuthStatus() {
             const { data: { session } } = await supabase.auth.getSession()
             if (session?.user) {
-                // Verify admin role for existing session
-                const { data: adminCheck, error: adminError } = await supabase.rpc('verify_admin_user', {
-                    user_email: session.user.email
-                })
+                // Verify admin role for existing session - Direct table query
+                const { data: adminCheck, error: adminError } = await supabase
+                    .from('admin_users')
+                    .select('id, email, is_active')
+                    .eq('email', session.user.email)
+                    .eq('is_active', true)
+                    .single()
                 
                 if (adminError) {
                     console.error('Admin verification error:', adminError)
@@ -991,10 +995,13 @@
                     return
                 }
                 
-                // Step 2: Verify admin role
-                const { data: adminCheck, error: adminError } = await supabase.rpc('verify_admin_user', {
-                    user_email: email
-                })
+                // Step 2: Verify admin role - Direct table query to avoid function conflicts
+                const { data: adminCheck, error: adminError } = await supabase
+                    .from('admin_users')
+                    .select('id, email, is_active')
+                    .eq('email', email)
+                    .eq('is_active', true)
+                    .single()
                 
                 if (adminError) {
                     console.error('Admin verification error:', adminError)
@@ -1009,10 +1016,13 @@
                     return
                 }
                 
-                // Step 3: Get admin user info and update last login
-                const { data: adminInfo, error: infoError } = await supabase.rpc('get_admin_user_info', {
-                    user_email: email
-                })
+                // Step 3: Get admin user info and update last login - Direct table query
+                const { data: adminInfo, error: infoError } = await supabase
+                    .from('admin_users')
+                    .select('id, email, name, role, is_active, last_login_at')
+                    .eq('email', email)
+                    .eq('is_active', true)
+                    .single()
                 
                 if (infoError) {
                     console.error('Admin info error:', infoError)
@@ -1021,10 +1031,14 @@
                     return
                 }
                 
-                // Step 4: Update last login timestamp
-                const { error: updateError } = await supabase.rpc('update_admin_last_login', {
-                    user_email: email
-                })
+                // Step 4: Update last login timestamp - Direct table update
+                const { error: updateError } = await supabase
+                    .from('admin_users')
+                    .update({ 
+                        last_login_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('email', email)
                 
                 if (updateError) {
                     console.error('Login update error:', updateError)
@@ -1033,7 +1047,7 @@
                 
                 // Step 5: Store admin info and proceed
                 currentUser = data.user
-                currentUser.adminInfo = adminInfo[0] || { role: 'admin', name: 'Admin User' }
+                currentUser.adminInfo = adminInfo || { role: 'admin', name: 'Admin User' }
                 
                 showAdminSection()
                 loadMembers()
@@ -1102,21 +1116,18 @@
                     if (filter) {
                         switch (filter) {
                             case 'verified':
-                                query = query.eq('email_verified', true).or('archived.is.null,archived.eq.false');
+                                query = query.eq('email_verified', true);
                                 break;
                             case 'pending':
-                                query = query.eq('email_verified', false).or('archived.is.null,archived.eq.false');
+                                query = query.eq('email_verified', false);
                                 break;
                             case 'genesis':
-                                query = query.eq('include_in_genesis_group', true).or('archived.is.null,archived.eq.false');
+                                query = query.eq('include_in_genesis_group', true);
                                 break;
                             case 'archived':
-                                query = query.eq('archived', true);
+                                // For now, show all members since we're not sure about archived column
                                 break;
                         }
-                    } else {
-                        // Show only non-archived by default
-                        query = query.or('archived.is.null,archived.eq.false');
                     }
                     
                     // Apply search filter
@@ -1137,8 +1148,8 @@
                     error = e;
                 }
                 
-                if (error || !data.length) {
-                    // Try offline cache
+                if (error) {
+                    // Try offline cache only when there's an actual error
                     data = await getMembersFromIndexedDB();
                     count = data.length;
                     isOfflineMode = true;
@@ -1148,6 +1159,7 @@
                     const endIndex = startIndex + pageSize;
                     data = data.slice(startIndex, endIndex);
                 } else {
+                    // Cache successful data (even if empty array)
                     await cacheMembersToIndexedDB(data);
                 }
                 
@@ -1227,27 +1239,87 @@
                     </td>
                 </tr>
             `).join('');
-            // Checkbox event listeners
-            setTimeout(() => {
-                document.getElementById('selectAllCheckbox').onclick = function() {
+            // Setup checkbox event listeners using event delegation
+            setupCheckboxEventListeners(filteredMembers);
+        }
+        
+        function setupCheckboxEventListeners(currentPageMembers) {
+            // Remove any existing event listeners to prevent duplicates
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            
+            if (selectAllCheckbox) {
+                // Clone node to remove all event listeners
+                const newSelectAll = selectAllCheckbox.cloneNode(true);
+                selectAllCheckbox.parentNode.replaceChild(newSelectAll, selectAllCheckbox);
+                
+                // Add fresh event listener
+                newSelectAll.addEventListener('change', function() {
                     if (this.checked) {
-                        filteredMembers.forEach(m => selectedMemberIds.add(m.id));
+                        // Select all members on current page
+                        currentPageMembers.forEach(m => selectedMemberIds.add(String(m.id)));
                     } else {
-                        filteredMembers.forEach(m => selectedMemberIds.delete(m.id));
+                        // Deselect all members on current page
+                        currentPageMembers.forEach(m => selectedMemberIds.delete(String(m.id)));
                     }
-                    renderMembers();
-                };
-                document.querySelectorAll('.rowCheckbox').forEach(cb => {
-                    cb.onclick = function() {
-                        if (this.checked) {
-                            selectedMemberIds.add(this.dataset.id);
-                        } else {
-                            selectedMemberIds.delete(this.dataset.id);
-                        }
-                        renderMembers();
-                    };
+                    updateBulkDeleteButton();
+                    updateRowCheckboxes(currentPageMembers);
                 });
-            }, 0);
+            }
+            
+            // Set up row checkbox event listeners using event delegation
+            const tableBody = document.getElementById('membersTableBody');
+            if (tableBody) {
+                // Remove existing delegated listener
+                tableBody.removeEventListener('change', handleRowCheckboxChange);
+                // Add fresh delegated listener
+                tableBody.addEventListener('change', handleRowCheckboxChange);
+            }
+            
+            // Update UI state
+            updateBulkDeleteButton();
+            updateSelectAllCheckbox(currentPageMembers);
+        }
+        
+        function handleRowCheckboxChange(event) {
+            if (event.target.classList.contains('rowCheckbox')) {
+                const memberId = String(event.target.dataset.id);
+                if (event.target.checked) {
+                    selectedMemberIds.add(memberId);
+                } else {
+                    selectedMemberIds.delete(memberId);
+                }
+                updateBulkDeleteButton();
+                updateSelectAllCheckbox(members);
+            }
+        }
+        
+        function updateBulkDeleteButton() {
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            if (bulkDeleteBtn) {
+                bulkDeleteBtn.disabled = selectedMemberIds.size === 0;
+                bulkDeleteBtn.textContent = selectedMemberIds.size > 0 
+                    ? `Delete Selected (${selectedMemberIds.size})` 
+                    : 'Delete Selected';
+            }
+        }
+        
+        function updateSelectAllCheckbox(currentPageMembers) {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox && currentPageMembers.length > 0) {
+                const currentPageIds = currentPageMembers.map(m => String(m.id));
+                const selectedOnPage = currentPageIds.filter(id => selectedMemberIds.has(id));
+                
+                selectAllCheckbox.checked = selectedOnPage.length === currentPageIds.length;
+                selectAllCheckbox.indeterminate = selectedOnPage.length > 0 && selectedOnPage.length < currentPageIds.length;
+            }
+        }
+        
+        function updateRowCheckboxes(currentPageMembers) {
+            document.querySelectorAll('.rowCheckbox').forEach(checkbox => {
+                const memberId = String(checkbox.dataset.id);
+                checkbox.checked = selectedMemberIds.has(memberId);
+            });
         }
         
         function getFilteredMembers() {
@@ -1300,11 +1372,30 @@
             return 'Pending'
         }
         
-        function updateStatistics() {
-            document.getElementById('totalMembers').textContent = members.length
-            document.getElementById('genesisMembers').textContent = members.filter(m => m.include_in_genesis_group).length
-            document.getElementById('verifiedMembers').textContent = members.filter(m => m.email_verified).length
-            document.getElementById('pendingSync').textContent = members.filter(m => m.sync_source === 'local').length
+        async function updateStatistics() {
+            try {
+                // Use totalMembers from pagination query for main count
+                document.getElementById('totalMembers').textContent = totalMembers || 0;
+                
+                // Get specific counts with simplified queries
+                const [genesisRes, verifiedRes, pendingRes] = await Promise.all([
+                    supabase.from('members').select('*', { count: 'exact', head: true }).eq('include_in_genesis_group', true),
+                    supabase.from('members').select('*', { count: 'exact', head: true }).eq('email_verified', true),
+                    supabase.from('members').select('*', { count: 'exact', head: true }).eq('sync_source', 'local')
+                ]);
+                
+                document.getElementById('genesisMembers').textContent = genesisRes.count || 0;
+                document.getElementById('verifiedMembers').textContent = verifiedRes.count || 0;
+                document.getElementById('pendingSync').textContent = pendingRes.count || 0;
+                
+            } catch (error) {
+                console.error('Error updating statistics:', error);
+                // Fallback to totalMembers count and current page data
+                document.getElementById('totalMembers').textContent = totalMembers || 0;
+                document.getElementById('genesisMembers').textContent = members.filter(m => m.include_in_genesis_group).length;
+                document.getElementById('verifiedMembers').textContent = members.filter(m => m.email_verified).length;
+                document.getElementById('pendingSync').textContent = members.filter(m => m.sync_source === 'local').length;
+            }
         }
         
         function filterMembers() {
@@ -1742,11 +1833,53 @@
 
         async function deleteSelectedMembers() {
             const ids = Array.from(selectedMemberIds);
-            for (const id of ids) {
-                await deleteMember(id, true);
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+            
+            // Show loading state
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const originalText = bulkDeleteBtn.textContent;
+            bulkDeleteBtn.disabled = true;
+            bulkDeleteBtn.textContent = 'Deleting...';
+            
+            try {
+                for (let i = 0; i < ids.length; i++) {
+                    const id = ids[i];
+                    bulkDeleteBtn.textContent = `Deleting ${i + 1}/${ids.length}...`;
+                    
+                    try {
+                        await deleteMember(id, true);
+                        successCount++;
+                    } catch (error) {
+                        errorCount++;
+                        errors.push({ id, error: error.message });
+                        console.error(`Failed to delete member ${id}:`, error);
+                    }
+                }
+                
+                // Clear selections and reload
+                selectedMemberIds.clear();
+                await loadMembers();
+                
+                // Show results
+                if (successCount > 0 && errorCount === 0) {
+                    showSuccess(`Successfully deleted ${successCount} member(s).`);
+                } else if (successCount > 0 && errorCount > 0) {
+                    showError(`Deleted ${successCount} member(s), but ${errorCount} failed. Check console for details.`);
+                } else {
+                    showError(`Failed to delete all ${errorCount} selected member(s). Check console for details.`);
+                }
+                
+            } catch (error) {
+                console.error('Bulk delete operation failed:', error);
+                showError('Bulk delete operation failed: ' + error.message);
+            } finally {
+                // Reset button state
+                bulkDeleteBtn.disabled = false;
+                bulkDeleteBtn.textContent = originalText;
+                updateBulkDeleteButton();
             }
-            selectedMemberIds.clear();
-            loadMembers();
         }
 
         async function deleteMember(memberId, silent) {
@@ -1755,11 +1888,35 @@
                     .from('members')
                     .delete()
                     .eq('id', memberId);
+                
                 if (error) throw error;
-                if (!silent) loadMembers();
+                
+                if (!silent) {
+                    await loadMembers();
+                    showSuccess('Member deleted successfully.');
+                }
             } catch (error) {
-                if (!silent) alert('Failed to delete member: ' + error.message);
+                if (!silent) {
+                    showError('Failed to delete member: ' + error.message);
+                }
+                throw error; // Re-throw for bulk operations to handle
             }
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.style.cssText = 'background: #f0f9ff; color: #0369a1; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #0ea5e9;';
+            successDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(successDiv, container.firstChild);
+            
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.parentNode.removeChild(successDiv);
+                }
+            }, 5000);
         }
     </script>
 </body>

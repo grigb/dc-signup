@@ -6,17 +6,14 @@
 /join /
 /genesis /
 
-# Admin tool routes - must come before catch-all
+# IMPORTANT: Specific routes MUST come before catch-all
 /admin /admin.html 200
 /admin/ /admin.html 200
-
-# Verification page routes - must come before catch-all
 /verify /verify.html 200
 /verify/ /verify.html 200
-
-# Member dashboard routes
+/verify.html /verify.html 200
 /member /member.html 200
 /member/ /member.html 200
 
-# Catch-all for main form (must be last)
-/* /index.html 200
+# Catch-all for main form (must be last) - REMOVED for now to debug
+# /* /index.html 200

@@ -69,10 +69,10 @@
                 <input type="email" id="email" name="email" required>
             </div>
 
-            <div class="form-group">
-                <label>Creator Type (select all that apply) *</label>
+            <div class="form-group creator-type-container">
+                <label>Creator Type (optional - helps us build community)</label>
                 <div class="simple-creator-input" onclick="openCreatorTypeModal()">
-                    <span id="creatorTypeDisplay">Click to select your creator types</span>
+                    <span id="creatorTypeDisplay">Click to select if you're a creator</span>
                     <span id="selectionCount">0 selected</span>
                 </div>
                 
@@ -240,7 +240,7 @@
         <div class="modal-content">
             <!-- Fixed Header -->
             <div class="modal-header">
-                <h3 class="modal-title">Select Your Creator Types</h3>
+                <h3 class="modal-title">Select Your Creator Types (Optional)</h3>
                 <button class="modal-close" onclick="closeCreatorTypeModal()">&times;</button>
             </div>
             
@@ -806,6 +806,9 @@
 
         // Global variable to store current submission data
         let currentSubmission = null
+        
+        // Track if user has been warned about creator types
+        let creatorTypeWarningShown = false
 
         // Form submission handler - now shows confirmation step
         form.addEventListener('submit', async function(e) {
@@ -826,8 +829,16 @@
             
             const totalTypes = selectedCreatorTypes.length + (otherValue ? 1 : 0)
             if (totalTypes === 0) {
-                showError('Please select at least one creator type.')
-                return
+                if (!creatorTypeWarningShown) {
+                    // First time - show gentle suggestion
+                    creatorTypeWarningShown = true
+                    highlightCreatorTypeSection()
+                    showError('💡 While not required, selecting your creator type(s) helps us build a stronger community. You can skip this and submit again, or choose your types above.')
+                    return
+                } else {
+                    // Second time - allow submission but show a note
+                    console.log('User chose to submit without creator types - allowing submission')
+                }
             }
 
             // Check for duplicate email
@@ -1219,6 +1230,24 @@
             errorMessage.textContent = message
             errorMessage.style.display = 'block'
             setTimeout(() => errorMessage.style.display = 'none', 5000)
+        }
+
+        function highlightCreatorTypeSection() {
+            const creatorTypeSection = document.querySelector('.creator-type-container')
+            if (creatorTypeSection) {
+                // Add highlight styling
+                creatorTypeSection.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.3)'
+                creatorTypeSection.style.borderRadius = '8px'
+                creatorTypeSection.style.transition = 'box-shadow 0.3s ease'
+                
+                // Scroll to the section
+                creatorTypeSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                
+                // Remove highlight after a few seconds
+                setTimeout(() => {
+                    creatorTypeSection.style.boxShadow = ''
+                }, 5000)
+            }
         }
 
         function hideMessages() {

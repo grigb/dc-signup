@@ -10,5 +10,13 @@
 /admin /admin.html 200
 /admin/ /admin.html 200
 
+# Verification page routes - must come before catch-all
+/verify /verify.html 200
+/verify/ /verify.html 200
+
+# Member dashboard routes
+/member /member.html 200
+/member/ /member.html 200
+
 # Catch-all for main form (must be last)
 /* /index.html 200

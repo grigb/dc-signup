@@ -19,8 +19,8 @@ async function sendEmailViaSES(email: string, name: string, verificationToken: s
     throw new Error('AWS credentials not configured')
   }
 
-  // Use environment variable for base URL or fallback to localhost for development
-  const baseUrl = Deno.env.get('VERIFICATION_BASE_URL') || 'http://localhost:4100'
+  // Use production URL - can be overridden with VERIFICATION_BASE_URL environment variable
+  const baseUrl = Deno.env.get('VERIFICATION_BASE_URL') || 'https://signup.distributedcreatives.org'
   const verificationUrl = `${baseUrl}/verify?token=${verificationToken}`
   
   // Construct the email

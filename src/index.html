@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-title" content="DC Genesis">
     
     <!-- SEO Meta Tags -->
-    <meta property="og:title" content="Join Genesis Members - Distributed Creatives">
+    <meta property="og:title" content="Join Distributed Creatives">
     <meta property="og:description" content="Join the founding members of the creator-owned network advocating for artist rights.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://signup.distributedcreatives.org">
@@ -2108,6 +2108,14 @@
                 }
             }, 2000); // Check every 2 seconds
             console.log('Auto-reload enabled (dev mode)');
+        }
+        
+        // Check for verification parameter and redirect to verification page
+        const verifyParams = new URLSearchParams(window.location.search);
+        const verifyToken = verifyParams.get('verify');
+        if (verifyToken) {
+            console.log('Verification token detected, redirecting to verify.html');
+            window.location.href = `/verify.html?token=${verifyToken}`;
         }
         
         console.log('[SCRIPT END] DC Signup System script has finished loading');

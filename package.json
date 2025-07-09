@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "cd src && python3 -m http.server 4100",
     "build": "rm -rf dist && cp -R src dist",
-    "test": "node tests/utils/test-supabase-setup.js"
+    "test": "node tests/utils/test-supabase-setup.js",
+    "deploy": "bash deploy.sh",
+    "deploy:force": "bash deploy-force.sh",
+    "deploy:check": "bash check-deployment.sh"
   },
   "repository": {
     "type": "git",

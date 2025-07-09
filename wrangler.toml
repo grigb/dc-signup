@@ -1,4 +1,8 @@
 name = "dc-signup-system"
 compatibility_date = "2025-07-09"
 
-pages_build_output_dir = "src"
+[build]
+command = "npm run build"
+cwd = "."
+
+pages_build_output_dir = "dist"

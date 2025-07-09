@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC Signup Embed Examples</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .example {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .code {
+            background: #343a40;
+            color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .demo {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>DC Signup System - Embed Examples</h1>
+    
+    <h2>Option 1: Simple iframe</h2>
+    <div class="example">
+        <h3>Copy this code:</h3>
+        <div class="code">
+&lt;iframe 
+  src="https://signup.distributedcreatives.org" 
+  width="100%" 
+  height="800" 
+  frameborder="0"
+  style="border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"&gt;
+&lt;/iframe&gt;
+        </div>
+        
+        <h3>Result:</h3>
+        <div class="demo">
+            <iframe 
+              src="https://signup.distributedcreatives.org" 
+              width="100%" 
+              height="600" 
+              frameborder="0"
+              style="border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            </iframe>
+        </div>
+    </div>
+    
+    <h2>Option 2: JavaScript Widget</h2>
+    <div class="example">
+        <h3>Copy this code:</h3>
+        <div class="code">
+&lt;!-- Add this to your page --&gt;
+&lt;div id="dc-signup-widget"&gt;&lt;/div&gt;
+
+&lt;script src="https://signup.distributedcreatives.org/embed-widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+DCSignupWidget('dc-signup-widget', {
+    width: '100%',
+    height: '600px',
+    theme: 'default',
+    onComplete: function(memberData) {
+        console.log('New member signed up:', memberData);
+        // Your custom success handling here
+    }
+});
+&lt;/script&gt;
+        </div>
+        
+        <h3>Or use data attributes (auto-initialize):</h3>
+        <div class="code">
+&lt;div id="dc-signup" data-dc-signup data-width="100%" data-height="600px"&gt;&lt;/div&gt;
+&lt;script src="https://signup.distributedcreatives.org/embed-widget.js"&gt;&lt;/script&gt;
+        </div>
+    </div>
+    
+    <h2>Option 3: Button Modal</h2>
+    <div class="example">
+        <h3>Copy this code:</h3>
+        <div class="code">
+&lt;button onclick="openDCSignup()"&gt;Join Distributed Creatives&lt;/button&gt;
+
+&lt;script&gt;
+function openDCSignup() {
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.5); z-index: 10000; display: flex; 
+        justify-content: center; align-items: center; padding: 20px;
+    `;
+    
+    // Create modal content
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: white; border-radius: 12px; width: 100%; max-width: 600px; 
+        height: 80vh; position: relative; overflow: hidden;
+    `;
+    
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+        position: absolute; top: 10px; right: 15px; background: none; 
+        border: none; font-size: 24px; cursor: pointer; z-index: 1;
+    `;
+    closeBtn.onclick = () => document.body.removeChild(overlay);
+    
+    // iframe
+    const iframe = document.createElement('iframe');
+    iframe.src = 'https://signup.distributedcreatives.org';
+    iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+    
+    modal.appendChild(closeBtn);
+    modal.appendChild(iframe);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
+        }
+    });
+}
+&lt;/script&gt;
+        </div>
+        
+        <h3>Result:</h3>
+        <div class="demo">
+            <button onclick="openDCSignup()" style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white; border: none; padding: 12px 24px; 
+                border-radius: 6px; font-size: 16px; cursor: pointer;
+            ">Join Distributed Creatives</button>
+        </div>
+    </div>
+    
+    <script>
+        function openDCSignup() {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.5); z-index: 10000; display: flex; 
+                justify-content: center; align-items: center; padding: 20px;
+            `;
+            
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white; border-radius: 12px; width: 100%; max-width: 600px; 
+                height: 80vh; position: relative; overflow: hidden;
+            `;
+            
+            // Close button
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute; top: 10px; right: 15px; background: none; 
+                border: none; font-size: 24px; cursor: pointer; z-index: 1;
+            `;
+            closeBtn.onclick = () => document.body.removeChild(overlay);
+            
+            // iframe
+            const iframe = document.createElement('iframe');
+            iframe.src = 'https://signup.distributedcreatives.org';
+            iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+            
+            modal.appendChild(closeBtn);
+            modal.appendChild(iframe);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Close on overlay click
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    document.body.removeChild(overlay);
+                }
+            });
+        }
+    </script>
+    
+    <h2>Customization Options</h2>
+    <div class="example">
+        <h3>URL Parameters for Customization:</h3>
+        <ul>
+            <li><code>?embedded=true</code> - Removes header/footer for embedding</li>
+            <li><code>?theme=dark</code> - Dark theme (if implemented)</li>
+            <li><code>?source=yoursite.com</code> - Track signup source</li>
+            <li><code>?redirect=https://yoursite.com/welcome</code> - Custom redirect after signup</li>
+        </ul>
+        
+        <h3>Example:</h3>
+        <div class="code">
+https://signup.distributedcreatives.org?embedded=true&source=myblog.com&redirect=https://myblog.com/welcome
+        </div>
+    </div>
+</body>
+</html>

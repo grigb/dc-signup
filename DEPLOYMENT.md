@@ -19,9 +19,10 @@ npm run deploy:check
 
 1. **Make your changes** locally
 2. **Test locally** with `npm run dev` (http://localhost:4100)
-3. **Deploy** with `npm run deploy`
-4. **Verify** with `npm run deploy:check`
-5. **If issues**, use `npm run deploy:force`
+3. **Test on mobile** with `npm run dev:mobile` (shows IP for phone testing)
+4. **Deploy** with `npm run deploy`
+5. **Verify** with `npm run deploy:check`
+6. **If issues**, use `npm run deploy:force`
 
 ## 🔧 Deployment Commands
 

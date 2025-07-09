@@ -32,7 +32,8 @@
     
 </head>
 <body>
-    <div class="container">
+    <div class="page-wrapper">
+        <div class="container">
         <!-- Fixed Header with Logo -->
         <div class="logo" onclick="goToHomepage()">
             <img src="./assets/images/distributed-creatives-logo-320px.png?v=2" alt="Distributed Creatives Logo">
@@ -101,6 +102,36 @@
                 </select>
             </div>
 
+            <!-- Member Showcase Section -->
+            <div class="member-showcase" id="memberShowcase">
+                <h4>✨ Tell us about yourself (optional)</h4>
+                
+                <div class="form-group">
+                    <label for="memberBio">About You</label>
+                    <textarea 
+                        id="memberBio" 
+                        name="memberBio" 
+                        placeholder="Share something about your creative work, background, or what you're working on."
+                        maxlength="300"
+                    ></textarea>
+                    <div class="char-count" id="bioCharCount">0/300 characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="memberQuote">Testimonial or Quote About DC</label>
+                    <textarea 
+                        id="memberQuote" 
+                        name="memberQuote" 
+                        placeholder="Share why you're excited about Distributed Creatives, why you joined, or your thoughts on creator rights."
+                        maxlength="500"
+                    ></textarea>
+                    <div class="char-count" id="quoteCharCount">0/500 characters</div>
+                    <div style="font-size: 12px; color: #059669; margin-top: 16px; margin-bottom: 8px; font-style: italic;">
+                        💡 Your testimonial helps us attract like-minded creators and showcase our community's impact
+                    </div>
+                </div>
+            </div>
+
             <!-- Privacy Controls -->
             <div class="privacy-section">
                 <h3>🔒 Website Display Preferences</h3>
@@ -135,36 +166,6 @@
                         Include me in the "Genesis Members" showcase
                         <div class="privacy-description">Feature me as a founding community member</div>
                     </label>
-                </div>
-            </div>
-
-            <!-- Member Showcase Section -->
-            <div class="member-showcase" id="memberShowcase">
-                <h4>✨ Tell us about yourself (optional)</h4>
-                
-                <div class="form-group">
-                    <label for="memberBio">About You</label>
-                    <textarea 
-                        id="memberBio" 
-                        name="memberBio" 
-                        placeholder="Share something about your creative work, background, or what you're working on."
-                        maxlength="300"
-                    ></textarea>
-                    <div class="char-count" id="bioCharCount">0/300 characters</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="memberQuote">Testimonial or Quote About DC</label>
-                    <textarea 
-                        id="memberQuote" 
-                        name="memberQuote" 
-                        placeholder="Share why you're excited about Distributed Creatives, why you joined, or your thoughts on creator rights."
-                        maxlength="500"
-                    ></textarea>
-                    <div class="char-count" id="quoteCharCount">0/500 characters</div>
-                    <div style="font-size: 12px; color: #059669; margin-top: 16px; margin-bottom: 8px; font-style: italic;">
-                        💡 Your testimonial helps us attract like-minded creators and showcase our community's impact
-                    </div>
                 </div>
             </div>
             </form>
@@ -263,6 +264,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -431,41 +433,10 @@
             }
         }
 
-        // Force centering with JavaScript as fallback
+        // Disabled centering function - now using normal document flow
         function ensureCentering() {
-            const container = document.querySelector('.container')
-            const body = document.body
-            
-            // Check if container is properly centered
-            const containerRect = container.getBoundingClientRect()
-            const bodyRect = body.getBoundingClientRect()
-            
-            const isHorizontallyCentered = Math.abs(
-                containerRect.left - (bodyRect.width - containerRect.width) / 2
-            ) < 10
-            
-            const isVerticallyCentered = Math.abs(
-                containerRect.top - (bodyRect.height - containerRect.height) / 2
-            ) < 10
-            
-            if (!isHorizontallyCentered || !isVerticallyCentered) {
-                console.log('Container not properly centered, applying JS fallback')
-                
-                // Apply fixed positioning fallback
-                container.style.position = 'fixed'
-                container.style.top = '50%'
-                container.style.left = '50%'
-                container.style.transform = 'translate(-50%, -50%)'
-                container.style.margin = '0'
-                
-                // Ensure body background covers full viewport
-                body.style.position = 'fixed'
-                body.style.top = '0'
-                body.style.left = '0'
-                body.style.width = '100%'
-                body.style.height = '100%'
-                body.style.overflow = 'hidden'
-            }
+            // No longer needed - page now uses natural scrolling
+            console.log('Centering disabled - using natural document flow')
         }
 
         // Initialize app

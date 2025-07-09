@@ -5,10 +5,19 @@
     // Configuration
     const CONFIG = {
         authUrl: 'https://signup.distributedcreatives.org',
-        apiUrl: 'https://signup.distributedcreatives.org/api',
+        apiUrl: 'https://jgnyutkpxapaghderjmj.supabase.co/functions/v1',
         version: '1.0.0',
         cookieDomain: '.distributedcreatives.org', // Works across all subdomains
-        storageKey: 'dc_user_session'
+        storageKey: 'dc_user_session',
+        // Security: Only allow on DC domains
+        allowedDomains: [
+            'distributedcreatives.org',
+            'signup.distributedcreatives.org',
+            'blog.distributedcreatives.org',
+            'forum.distributedcreatives.org',
+            'shop.distributedcreatives.org',
+            'localhost' // Development only
+        ]
     };
     
     // SSO Widget Class
@@ -32,6 +41,18 @@
         
         async init() {
             try {
+                // Security: Check if domain is allowed
+                const currentDomain = window.location.hostname;
+                const isAllowedDomain = CONFIG.allowedDomains.some(domain => 
+                    currentDomain === domain || currentDomain.endsWith('.' + domain)
+                );
+                
+                if (!isAllowedDomain) {
+                    console.error('DC SSO Widget: Unauthorized domain:', currentDomain);
+                    this.renderError('Unauthorized domain');
+                    return;
+                }
+                
                 // Check for existing session
                 await this.checkSession();
                 this.render();
@@ -55,23 +76,34 @@
         
         async checkSession() {
             try {
-                // Check localStorage first
+                // Security: Validate stored session data
                 const stored = localStorage.getItem(CONFIG.storageKey);
                 if (stored) {
-                    const session = JSON.parse(stored);
-                    if (session.expires > Date.now()) {
-                        this.user = session.user;
-                        return;
+                    try {
+                        const session = JSON.parse(stored);
+                        // Security: Validate session structure
+                        if (session.expires && 
+                            session.expires > Date.now() && 
+                            session.user &&
+                            session.user.email &&
+                            session.user.id) {
+                            this.user = session.user;
+                            return;
+                        }
+                    } catch (e) {
+                        // Clear invalid session data
+                        localStorage.removeItem(CONFIG.storageKey);
                     }
                 }
                 
                 // Check with server
-                const response = await this.apiCall('/auth/session');
+                const response = await this.apiCall('/auth-session');
                 if (response.success && response.user) {
                     this.user = response.user;
                     // Store session
                     localStorage.setItem(CONFIG.storageKey, JSON.stringify({
                         user: response.user,
+                        access_token: response.session?.access_token,
                         expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
                     }));
                 } else {
@@ -85,12 +117,26 @@
         }
         
         async apiCall(endpoint, options = {}) {
+            // Get auth token from localStorage
+            const stored = localStorage.getItem(CONFIG.storageKey);
+            let token = null;
+            if (stored) {
+                const session = JSON.parse(stored);
+                token = session.access_token;
+            }
+            
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
             const response = await fetch(CONFIG.apiUrl + endpoint, {
                 credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                },
+                headers,
                 ...options
             });
             
@@ -124,14 +170,14 @@
                         ${showAvatar ? `
                             <div class="dc-avatar">
                                 ${user.avatar_url ? 
-                                    `<img src="${user.avatar_url}" alt="${user.name}" />` :
-                                    `<div class="dc-avatar-placeholder">${user.name.charAt(0).toUpperCase()}</div>`
+                                    `<img src="${this.escapeHtml(user.avatar_url)}" alt="${this.escapeHtml(user.name)}" />` :
+                                    `<div class="dc-avatar-placeholder">${this.escapeHtml(user.name.charAt(0).toUpperCase())}</div>`
                                 }
                             </div>
                         ` : ''}
                         
                         <div class="dc-user-details">
-                            ${showName ? `<div class="dc-user-name">${user.name}</div>` : ''}
+                            ${showName ? `<div class="dc-user-name">${this.escapeHtml(user.name)}</div>` : ''}
                             ${showCreatorBadge && isCreator ? `
                                 <div class="dc-creator-badge">
                                     <span class="dc-badge-icon">✨</span>
@@ -170,10 +216,10 @@
             this.injectStyles();
         }
         
-        renderError() {
+        renderError(message = 'Authentication unavailable') {
             this.container.innerHTML = `
                 <div class="dc-sso-widget error" data-theme="${this.options.theme}">
-                    <span class="dc-error-text">Authentication unavailable</span>
+                    <span class="dc-error-text">${this.escapeHtml(message)}</span>
                     <button class="dc-btn dc-btn-secondary" onclick="dcSSOWidget.retry()">
                         Retry
                     </button>
@@ -181,6 +227,13 @@
             `;
             
             this.injectStyles();
+        }
+        
+        // Security: Escape HTML to prevent XSS
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
         
         login() {
@@ -247,7 +300,7 @@
         
         async logout() {
             try {
-                await this.apiCall('/auth/logout', { method: 'POST' });
+                await this.apiCall('/auth-logout', { method: 'POST' });
                 this.user = null;
                 localStorage.removeItem(CONFIG.storageKey);
                 this.render();

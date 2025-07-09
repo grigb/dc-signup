@@ -5,7 +5,6 @@
   "main": "index.html",
   "scripts": {
     "dev": "cd src && python3 -m http.server 4100 --bind 0.0.0.0",
-    "dev:mobile": "echo 'Mobile testing:' && ifconfig | grep 'inet ' | grep -v 127.0.0.1 | awk '{print \"http://\" $2 \":4100\"}' && cd src && python3 -m http.server 4100 --bind 0.0.0.0",
     "build": "rm -rf dist && cp -R src dist",
     "test": "node tests/utils/test-supabase-setup.js",
     "deploy": "bash deploy.sh",
